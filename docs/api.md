@@ -100,7 +100,21 @@ Permanently deletes a project. Any time entries that referenced this project wil
 GET /api/time-entries
 ```
 
-Returns the 50 most recent time entries (including the currently running one if any).
+Returns time entries for the authenticated user.
+
+**Query parameters** (all optional)
+
+| Parameter | Description |
+|---|---|
+| `projectId` | Filter by project. Use `none` to return entries with no project, or a project ID to return entries for a specific project. |
+| `dateFrom` | Return entries whose `startTime` is **on or after** this value (ISO 8601 timestamp). |
+| `dateTo` | Return entries whose `startTime` is **on or before** this value (ISO 8601 timestamp). |
+
+**Behaviour notes**
+
+- When **no filter** is provided, returns the **50 most recent** entries.
+- When **any filter** is active, the 50-entry cap is lifted and all matching entries are returned.
+- The currently running entry (if any) is **always included** when a filter is active, so the live timer is never interrupted.
 
 **Response `200`**
 ```json
