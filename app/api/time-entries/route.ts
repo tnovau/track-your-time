@@ -2,19 +2,58 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { Prisma } from "@/app/generated/prisma/client";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const entries = await prisma.timeEntry.findMany({
-    where: { userId: session.user.id },
-    include: { project: { select: { id: true, name: true, color: true } } },
-    orderBy: { startTime: "desc" },
-    take: 50,
-  });
+  const { searchParams } = new URL(req.url);
+  const projectFilter = searchParams.get("projectId");
+  const dateFrom = searchParams.get("dateFrom");
+  const dateTo = searchParams.get("dateTo");
+  const isFiltered = !!(projectFilter || dateFrom || dateTo);
+
+  let entries;
+
+  if (!isFiltered) {
+    entries = await prisma.timeEntry.findMany({
+      where: { userId: session.user.id },
+      include: { project: { select: { id: true, name: true, color: true } } },
+      orderBy: { startTime: "desc" },
+      take: 50,
+    });
+  } else {
+    // Build conditions for completed entries
+    const completedConditions: Prisma.TimeEntryWhereInput = {
+      endTime: { not: null },
+    };
+
+    if (projectFilter === "none") {
+      completedConditions.projectId = null;
+    } else if (projectFilter) {
+      completedConditions.projectId = projectFilter;
+    }
+
+    if (dateFrom || dateTo) {
+      const startTimeFilter: { gte?: Date; lte?: Date } = {};
+      if (dateFrom) startTimeFilter.gte = new Date(dateFrom);
+      if (dateTo) startTimeFilter.lte = new Date(dateTo);
+      completedConditions.startTime = startTimeFilter;
+    }
+
+    // Always include the running entry so the timer stays accurate
+    entries = await prisma.timeEntry.findMany({
+      where: {
+        userId: session.user.id,
+        OR: [{ endTime: null }, completedConditions],
+      },
+      include: { project: { select: { id: true, name: true, color: true } } },
+      orderBy: { startTime: "desc" },
+    });
+  }
 
   return NextResponse.json(entries);
 }
