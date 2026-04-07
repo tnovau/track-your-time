@@ -21,7 +21,7 @@ interface TimeTrackerProps {
   userId: string;
 }
 
-interface EditState {
+interface EntryFormState {
   description: string;
   projectId: string;
   startTime: string;
@@ -51,12 +51,20 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const [selectedProject, setSelectedProject] = useState("");
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editState, setEditState] = useState<EditState>({
+  const [editState, setEditState] = useState<EntryFormState>({
     description: "",
     projectId: "",
     startTime: "",
     endTime: "",
   });
+  const [showManualForm, setShowManualForm] = useState(false);
+  const [manualEntry, setManualEntry] = useState<EntryFormState>({
+    description: "",
+    projectId: "",
+    startTime: "",
+    endTime: "",
+  });
+  const [manualError, setManualError] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     const [entriesRes, projectsRes] = await Promise.all([
@@ -171,6 +179,43 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
     }
   };
 
+  const handleManualCreate = async () => {
+    setManualError(null);
+    if (!manualEntry.startTime || !manualEntry.endTime) {
+      setManualError("Start time and end time are required.");
+      return;
+    }
+    const start = new Date(manualEntry.startTime);
+    const end = new Date(manualEntry.endTime);
+    if (end <= start) {
+      setManualError("End time must be after start time.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch("/api/time-entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: manualEntry.description || null,
+          projectId: manualEntry.projectId || null,
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+        }),
+      });
+      if (res.ok) {
+        setShowManualForm(false);
+        setManualEntry({ description: "", projectId: "", startTime: "", endTime: "" });
+        await fetchData();
+      } else {
+        const data = await res.json();
+        setManualError(data.error ?? "Failed to create entry.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const totalToday = entries.reduce((acc, e) => {
     const start = new Date(e.startTime);
     const today = new Date();
@@ -232,10 +277,76 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
       {/* Today's summary */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Today</h2>
-        <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-          Total: {formatDuration(totalToday)}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+            Total: {formatDuration(totalToday)}
+          </span>
+          <button
+            onClick={() => { setShowManualForm((v) => !v); setManualError(null); }}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {showManualForm ? "Cancel" : "+ Add entry"}
+          </button>
+        </div>
       </div>
+
+      {/* Manual entry form */}
+      {showManualForm && (
+        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
+          <h3 className="text-sm font-semibold">Add Manual Entry</h3>
+          <input
+            type="text"
+            placeholder="Description (optional)"
+            value={manualEntry.description}
+            onChange={(e) => setManualEntry((s) => ({ ...s, description: e.target.value }))}
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <select
+              value={manualEntry.projectId}
+              onChange={(e) => setManualEntry((s) => ({ ...s, projectId: e.target.value }))}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">No project</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="text-xs text-gray-500 dark:text-gray-400">Start</label>
+              <input
+                type="datetime-local"
+                value={manualEntry.startTime}
+                onChange={(e) => setManualEntry((s) => ({ ...s, startTime: e.target.value }))}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+            <div className="flex flex-col gap-1 flex-1">
+              <label className="text-xs text-gray-500 dark:text-gray-400">End</label>
+              <input
+                type="datetime-local"
+                value={manualEntry.endTime}
+                onChange={(e) => setManualEntry((s) => ({ ...s, endTime: e.target.value }))}
+                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+          </div>
+          {manualError && (
+            <p className="text-xs text-red-500">{manualError}</p>
+          )}
+          <div className="flex justify-end">
+            <button
+              onClick={handleManualCreate}
+              disabled={loading}
+              className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+            >
+              Save Entry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Entries list */}
       <div className="space-y-2">
