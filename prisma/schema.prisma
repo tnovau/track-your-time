@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Better Auth Models ───────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions      Session[]
+  accounts      Account[]
+  projects      Project[]
+  timeEntries   TimeEntry[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                   String    @id @default(cuid())
+  accountId            String
+  providerId           String
+  userId               String
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken          String?
+  refreshToken         String?
+  idToken              String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                String?
+  password             String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+// ─── Time Tracking Models ─────────────────────────────────────────────────────
+
+model Project {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  color       String      @default("#6366f1")
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  timeEntries TimeEntry[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([userId])
+}
+
+model TimeEntry {
+  id          String    @id @default(cuid())
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  duration    Int?      // in seconds, null if entry is still running
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+}
