@@ -25,7 +25,47 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Stop any currently running entry first
+  const body = await req.json();
+
+  // Manual entry: startTime and endTime provided by the client
+  if (body.startTime && body.endTime) {
+    const startTime = new Date(body.startTime);
+    const endTime = new Date(body.endTime);
+
+    if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid startTime or endTime" },
+        { status: 400 }
+      );
+    }
+
+    if (endTime <= startTime) {
+      return NextResponse.json(
+        { error: "endTime must be after startTime" },
+        { status: 400 }
+      );
+    }
+
+    const duration = Math.floor(
+      (endTime.getTime() - startTime.getTime()) / 1000
+    );
+
+    const entry = await prisma.timeEntry.create({
+      data: {
+        description: body.description ?? null,
+        startTime,
+        endTime,
+        duration,
+        userId: session.user.id,
+        projectId: body.projectId ?? null,
+      },
+      include: { project: { select: { id: true, name: true, color: true } } },
+    });
+
+    return NextResponse.json(entry, { status: 201 });
+  }
+
+  // Timer entry: stop any currently running entry first
   const running = await prisma.timeEntry.findFirst({
     where: { userId: session.user.id, endTime: null },
   });
@@ -40,7 +80,6 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const body = await req.json();
   const entry = await prisma.timeEntry.create({
     data: {
       description: body.description ?? null,
