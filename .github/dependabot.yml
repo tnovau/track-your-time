@@ -5,8 +5,18 @@
 
 version: 2
 updates:
-  - package-ecosystem: "" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    # Look for `package.json` and `lock` files in the `root` directory
+    directory: "/"
+    # Check the npm registry for updates every day (weekdays)
     schedule:
-      interval: "weekly"
+      interval: "daily"
 
+  # Enable version updates for docker-compose
+  - package-ecosystem: "docker-compose"
+    # Look for `docker-compose.yml` files in the `root` directory
+    directory: "/"
+    # Check the docker registry for updates every day (weekdays)
+    schedule:
+      interval: "daily"
