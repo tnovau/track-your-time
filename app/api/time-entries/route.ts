@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { Prisma } from "@/app/generated/prisma/client";
 
 export async function GET(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
     });
   } else {
     // Build conditions for completed entries
-    const completedConditions: Record<string, unknown> = {
+    const completedConditions: Prisma.TimeEntryWhereInput = {
       endTime: { not: null },
     };
 

@@ -77,8 +77,10 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const fetchData = useCallback(async () => {
     const params = new URLSearchParams();
     if (filterProjectId) params.set("projectId", filterProjectId);
-    if (filterDateFrom) params.set("dateFrom", `${filterDateFrom}T00:00:00.000Z`);
-    if (filterDateTo) params.set("dateTo", `${filterDateTo}T23:59:59.999Z`);
+    if (filterDateFrom)
+      params.set("dateFrom", new Date(`${filterDateFrom}T00:00:00`).toISOString());
+    if (filterDateTo)
+      params.set("dateTo", new Date(`${filterDateTo}T23:59:59.999`).toISOString());
     const qs = params.toString();
 
     const [entriesRes, projectsRes] = await Promise.all([
