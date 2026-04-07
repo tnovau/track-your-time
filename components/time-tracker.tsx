@@ -49,6 +49,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const [elapsed, setElapsed] = useState(0);
   const [description, setDescription] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
+  const [fetching, setFetching] = useState(true);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editState, setEditState] = useState<EntryFormState>({
@@ -75,30 +76,35 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const isFilterActive = !!(filterProjectId || filterDateFrom || filterDateTo);
 
   const fetchData = useCallback(async () => {
-    const params = new URLSearchParams();
-    if (filterProjectId) params.set("projectId", filterProjectId);
-    if (filterDateFrom)
-      params.set("dateFrom", new Date(`${filterDateFrom}T00:00:00`).toISOString());
-    if (filterDateTo)
-      params.set("dateTo", new Date(`${filterDateTo}T23:59:59.999`).toISOString());
-    const qs = params.toString();
+    setFetching(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterProjectId) params.set("projectId", filterProjectId);
+      if (filterDateFrom)
+        params.set("dateFrom", new Date(`${filterDateFrom}T00:00:00`).toISOString());
+      if (filterDateTo)
+        params.set("dateTo", new Date(`${filterDateTo}T23:59:59.999`).toISOString());
+      const qs = params.toString();
 
-    const [entriesRes, projectsRes] = await Promise.all([
-      fetch(`/api/time-entries${qs ? `?${qs}` : ""}`),
-      fetch("/api/projects"),
-    ]);
-    if (entriesRes.ok) {
-      const data: TimeEntry[] = await entriesRes.json();
-      setEntries(data.filter((e) => e.endTime !== null));
-      const running = data.find((e) => e.endTime === null) ?? null;
-      setRunningEntry(running);
-      if (running) {
-        setDescription(running.description ?? "");
-        setSelectedProject(running.project?.id ?? "");
+      const [entriesRes, projectsRes] = await Promise.all([
+        fetch(`/api/time-entries${qs ? `?${qs}` : ""}`),
+        fetch("/api/projects"),
+      ]);
+      if (entriesRes.ok) {
+        const data: TimeEntry[] = await entriesRes.json();
+        setEntries(data.filter((e) => e.endTime !== null));
+        const running = data.find((e) => e.endTime === null) ?? null;
+        setRunningEntry(running);
+        if (running) {
+          setDescription(running.description ?? "");
+          setSelectedProject(running.project?.id ?? "");
+        }
       }
-    }
-    if (projectsRes.ok) {
-      setProjects(await projectsRes.json());
+      if (projectsRes.ok) {
+        setProjects(await projectsRes.json());
+      }
+    } finally {
+      setFetching(false);
     }
   }, [filterProjectId, filterDateFrom, filterDateTo]);
 
@@ -443,14 +449,32 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
 
       {/* Entries list */}
       <div className="space-y-2">
-        {entries.length === 0 && !runningEntry && (
+        {fetching && (
+          <div className="space-y-2 animate-pulse" aria-label="Loading time entries">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="h-3 w-16 rounded bg-gray-200 dark:bg-gray-700" />
+                  <div className="h-3 w-12 rounded bg-gray-200 dark:bg-gray-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!fetching && entries.length === 0 && !runningEntry && (
           <p className="text-center py-12 text-gray-400">
             {isFilterActive
               ? "No entries match the current filter."
               : "No time entries yet. Start tracking!"}
           </p>
         )}
-        {runningEntry && (
+        {!fetching && runningEntry && (
           <div className="flex items-center justify-between rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse shrink-0" />
@@ -471,7 +495,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
             </span>
           </div>
         )}
-        {entries.map((entry) =>
+        {!fetching && entries.map((entry) =>
           editingId === entry.id ? (
             <div
               key={entry.id}
