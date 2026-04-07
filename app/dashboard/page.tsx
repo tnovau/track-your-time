@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import TimeTracker from "@/components/time-tracker";
 import SignOutButton from "@/components/sign-out-button";
+import ProjectManager from "@/components/project-manager";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
@@ -27,8 +28,10 @@ export default async function DashboardPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8 space-y-10">
         <TimeTracker userId={session.user.id} />
+        <hr className="border-gray-200 dark:border-gray-800" />
+        <ProjectManager />
       </main>
     </div>
   );
