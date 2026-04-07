@@ -119,6 +119,7 @@ function ProjectForm({
 
 export default function ProjectManager() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [fetching, setFetching] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -129,12 +130,17 @@ export default function ProjectManager() {
   const [editError, setEditError] = useState<string | null>(null);
 
   const fetchProjects = useCallback(async () => {
-    const res = await fetch("/api/projects");
-    if (res.ok) {
-      setProjects(await res.json());
-      setFetchError(null);
-    } else {
-      setFetchError("Failed to load projects. Please refresh the page.");
+    setFetching(true);
+    try {
+      const res = await fetch("/api/projects");
+      if (res.ok) {
+        setProjects(await res.json());
+        setFetchError(null);
+      } else {
+        setFetchError("Failed to load projects. Please refresh the page.");
+      }
+    } finally {
+      setFetching(false);
     }
   }, []);
 
@@ -257,15 +263,30 @@ export default function ProjectManager() {
       )}
 
       <div className="space-y-2">
-        {fetchError && (
+        {fetching && (
+          <div className="space-y-2 animate-pulse" aria-label="Loading projects">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+              >
+                <div className="h-3 w-3 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3 w-1/3 rounded bg-gray-200 dark:bg-gray-700" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        {!fetching && fetchError && (
           <p className="text-center py-4 text-sm text-red-500">{fetchError}</p>
         )}
-        {!fetchError && projects.length === 0 && (
+        {!fetching && !fetchError && projects.length === 0 && (
           <p className="text-center py-8 text-gray-400 text-sm">
             No projects yet. Create one to organize your time entries.
           </p>
         )}
-        {projects.map((project) =>
+        {!fetching && projects.map((project) =>
           editingId === project.id ? (
             <div
               key={project.id}
