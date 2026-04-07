@@ -53,6 +53,45 @@ Content-Type: application/json
 
 **Response `201`** – the created project object.
 
+### Update a project
+
+```
+PATCH /api/projects/:id
+Content-Type: application/json
+```
+
+Partially updates a project. All fields are optional; omitted fields retain their current values.
+
+**Request body**
+```json
+{
+  "name": "Renamed Project",
+  "description": "Updated description",
+  "color": "#f59e0b"
+}
+```
+
+- `name` must be a non-empty string if provided.
+- `color` must be a valid 6-digit hex color (e.g. `#a1b2c3`) if provided.
+
+**Response `200`** – the updated project object.
+
+**Response `400`** if `name` is empty or `color` format is invalid.
+
+**Response `404`** if the project is not found or does not belong to the authenticated user.
+
+### Delete a project
+
+```
+DELETE /api/projects/:id
+```
+
+Permanently deletes a project. Any time entries that referenced this project will have their `projectId` set to `null` (they are **not** deleted).
+
+**Response `204`** – no content.
+
+**Response `404`** if the project is not found or does not belong to the authenticated user.
+
 ## Time Entries
 
 ### List entries
@@ -79,14 +118,18 @@ Returns the 50 most recent time entries (including the currently running one if 
 
 A running entry has `endTime: null` and `duration: null`.
 
-### Start a new entry
+### Start / create an entry
 
 ```
 POST /api/time-entries
 Content-Type: application/json
 ```
 
-Stops any currently running entry, then starts a new one.
+Supports two distinct modes depending on the request body.
+
+#### Timer mode (live timer)
+
+When `startTime` and `endTime` are **not** provided, stops any currently running entry and starts a new live timer.
 
 **Request body**
 ```json
@@ -98,7 +141,50 @@ Stops any currently running entry, then starts a new one.
 
 Both fields are optional.
 
+**Response `201`** – the created entry object (with `endTime: null` and `duration: null`).
+
+#### Manual mode (retroactive entry)
+
+When both `startTime` **and** `endTime` are provided, creates a completed entry immediately. Duration is auto-calculated. Does not affect any running timer.
+
+**Request body**
+```json
+{
+  "description": "Working on feature X",
+  "projectId": "clyyy",
+  "startTime": "2026-01-01T09:00:00.000Z",
+  "endTime": "2026-01-01T10:30:00.000Z"
+}
+```
+
+`description` and `projectId` are optional.
+
 **Response `201`** – the created entry object.
+
+**Response `400`** if the dates are unparseable or `endTime` is not after `startTime`.
+
+### Edit an entry
+
+```
+PATCH /api/time-entries/:id
+Content-Type: application/json
+```
+
+Partially updates a time entry. All fields are optional; omitted fields retain their current values. Duration is automatically recalculated whenever `startTime` or `endTime` changes.
+
+**Request body**
+```json
+{
+  "description": "Updated description",
+  "projectId": "clyyy",
+  "startTime": "2026-01-01T09:00:00.000Z",
+  "endTime": "2026-01-01T10:30:00.000Z"
+}
+```
+
+**Response `200`** – the updated entry object.
+
+**Response `404`** if the entry is not found or does not belong to the authenticated user.
 
 ### Stop a running entry
 
