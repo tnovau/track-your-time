@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import TimeTracker from "@/components/time-tracker";
+import SignOutButton from "@/components/sign-out-button";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({
@@ -21,14 +22,7 @@ export default async function DashboardPage() {
             <span className="text-sm text-gray-500 dark:text-gray-400">
               {session.user.name ?? session.user.email}
             </span>
-            <form action="/api/auth/sign-out" method="POST">
-              <button
-                type="submit"
-                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
-              >
-                Sign out
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         </div>
       </header>
