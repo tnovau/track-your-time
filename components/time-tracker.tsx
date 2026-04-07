@@ -21,11 +21,25 @@ interface TimeTrackerProps {
   userId: string;
 }
 
+interface EditState {
+  description: string;
+  projectId: string;
+  startTime: string;
+  endTime: string;
+}
+
 function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
   return [h, m, s].map((v) => String(v).padStart(2, "0")).join(":");
+}
+
+/** Converts an ISO date string to the YYYY-MM-DDTHH:mm format required by datetime-local inputs. */
+function toDatetimeLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export default function TimeTracker({ userId }: TimeTrackerProps) {
@@ -36,6 +50,13 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const [description, setDescription] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editState, setEditState] = useState<EditState>({
+    description: "",
+    projectId: "",
+    startTime: "",
+    endTime: "",
+  });
 
   const fetchData = useCallback(async () => {
     const [entriesRes, projectsRes] = await Promise.all([
@@ -103,6 +124,46 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
         setRunningEntry(null);
         setDescription("");
         setSelectedProject("");
+        await fetchData();
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditStart = (entry: TimeEntry) => {
+    setEditingId(entry.id);
+    setEditState({
+      description: entry.description ?? "",
+      projectId: entry.project?.id ?? "",
+      startTime: toDatetimeLocal(entry.startTime),
+      endTime: entry.endTime ? toDatetimeLocal(entry.endTime) : "",
+    });
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+  };
+
+  const handleEditSave = async (id: string) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/time-entries/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: editState.description || null,
+          projectId: editState.projectId || null,
+          startTime: editState.startTime
+            ? new Date(editState.startTime).toISOString()
+            : undefined,
+          endTime: editState.endTime
+            ? new Date(editState.endTime).toISOString()
+            : undefined,
+        }),
+      });
+      if (res.ok) {
+        setEditingId(null);
         await fetchData();
       }
     } finally {
@@ -204,29 +265,121 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
             </span>
           </div>
         )}
-        {entries.map((entry) => (
-          <div
-            key={entry.id}
-            className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="text-sm font-medium truncate">
-                {entry.description ?? "No description"}
-              </span>
-              {entry.project && (
-                <span
-                  className="shrink-0 text-xs px-2 py-0.5 rounded-full text-white"
-                  style={{ backgroundColor: entry.project.color }}
+        {entries.map((entry) =>
+          editingId === entry.id ? (
+            <div
+              key={entry.id}
+              className="rounded-lg border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3"
+            >
+              <input
+                type="text"
+                placeholder="Description"
+                value={editState.description}
+                onChange={(e) =>
+                  setEditState((s) => ({ ...s, description: e.target.value }))
+                }
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <div className="flex flex-col sm:flex-row gap-3">
+                <select
+                  value={editState.projectId}
+                  onChange={(e) =>
+                    setEditState((s) => ({ ...s, projectId: e.target.value }))
+                  }
+                  className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  {entry.project.name}
-                </span>
-              )}
+                  <option value="">No project</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-col sm:flex-row gap-3 flex-1">
+                  <div className="flex flex-col gap-1 flex-1">
+                    <label className="text-xs text-gray-500 dark:text-gray-400">
+                      Start
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={editState.startTime}
+                      onChange={(e) =>
+                        setEditState((s) => ({
+                          ...s,
+                          startTime: e.target.value,
+                        }))
+                      }
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1 flex-1">
+                    <label className="text-xs text-gray-500 dark:text-gray-400">
+                      End
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={editState.endTime}
+                      onChange={(e) =>
+                        setEditState((s) => ({
+                          ...s,
+                          endTime: e.target.value,
+                        }))
+                      }
+                      className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleEditCancel}
+                  disabled={loading}
+                  className="rounded-lg px-4 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-60"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleEditSave(entry.id)}
+                  disabled={loading}
+                  className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+                >
+                  Save
+                </button>
+              </div>
             </div>
-            <span className="font-mono text-sm tabular-nums text-gray-500 dark:text-gray-400 shrink-0">
-              {formatDuration(entry.duration ?? 0)}
-            </span>
-          </div>
-        ))}
+          ) : (
+            <div
+              key={entry.id}
+              className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="text-sm font-medium truncate">
+                  {entry.description ?? "No description"}
+                </span>
+                {entry.project && (
+                  <span
+                    className="shrink-0 text-xs px-2 py-0.5 rounded-full text-white"
+                    style={{ backgroundColor: entry.project.color }}
+                  >
+                    {entry.project.name}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-mono text-sm tabular-nums text-gray-500 dark:text-gray-400">
+                  {formatDuration(entry.duration ?? 0)}
+                </span>
+                <button
+                  onClick={() => handleEditStart(entry)}
+                  className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                  aria-label="Edit entry"
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          )
+        )}
       </div>
 
       {/* Hidden userId for reference */}
