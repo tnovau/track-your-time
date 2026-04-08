@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
+import CookieConsent from "@/components/cookie-consent";
 import "./globals.css";
 
 const siteUrl = process.env.BETTER_AUTH_URL || "http://localhost:3000";
@@ -58,6 +59,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         {children}
+        <CookieConsent />
         <Analytics />
       </body>
     </html>
