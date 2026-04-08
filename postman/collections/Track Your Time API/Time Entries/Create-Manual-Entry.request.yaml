@@ -1,0 +1,61 @@
+$kind: http-request
+name: Create Manual Entry
+method: POST
+url: '{{baseUrl}}/api/time-entries'
+order: 3000
+description: |-
+  **Manual mode** – creates a completed time entry immediately by providing both `startTime` and
+  `endTime`. Duration is auto-calculated. Does not affect any running timer.
+
+  `description` and `projectId` are optional.
+
+  **Response `201`** – the created entry object with a calculated `duration` (seconds).
+  **Response `400`** – if the dates are unparseable or `endTime` is not after `startTime`.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "Working on feature X",
+      "projectId": "{{projectId}}",
+      "startTime": "2026-01-01T09:00:00.000Z",
+      "endTime": "2026-01-01T10:30:00.000Z"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Manual entry has required fields', function () {
+          const entry = pm.response.json();
+          pm.expect(entry).to.have.property('id');
+          pm.expect(entry).to.have.property('startTime');
+          pm.expect(entry).to.have.property('endTime');
+          pm.expect(entry).to.have.property('duration');
+      });
+
+      pm.test('Manual entry is completed (endTime and duration are not null)', function () {
+          const entry = pm.response.json();
+          pm.expect(entry.endTime).to.not.be.null;
+          pm.expect(entry.duration).to.be.a('number').and.above(0);
+      });
+
+      pm.test('Duration matches startTime to endTime (5400 seconds = 1.5 h)', function () {
+          pm.expect(pm.response.json().duration).to.eql(5400);
+      });
+
+      // Persist the new entry ID for downstream requests.
+      const entry = pm.response.json();
+      if (entry && entry.id) {
+          pm.collectionVariables.set('timeEntryId', entry.id);
+          console.log('timeEntryId set to', entry.id);
+      }

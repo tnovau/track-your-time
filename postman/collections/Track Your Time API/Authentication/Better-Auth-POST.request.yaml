@@ -1,0 +1,38 @@
+$kind: http-request
+name: Better Auth POST
+method: POST
+url: '{{baseUrl}}/api/auth/*'
+order: 2000
+description: |-
+  Wildcard reference for Better Auth internal POST endpoints (e.g. sign-in, sign-up, sign-out).
+  Exact routes are managed by the Better Auth library catch-all handler.
+  Replace `*` with the specific Better Auth path you need (e.g. `sign-in/email`, `sign-up/email`,
+  `sign-out`).
+
+  **Common paths**
+  - `sign-up/email` – register a new account
+  - `sign-in/email` – authenticate with email + password
+  - `sign-out` – invalidate the current session
+
+  Example body for `sign-in/email`:
+  ```json
+  { "email": "user@example.com", "password": "secret" }
+  ```
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "user@example.com",
+      "password": "secret"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Better Auth routes are library-managed; only assert the request was handled.
+      pm.test('Response received', function () {
+          pm.response.to.have.status.oneOf([200, 201, 302, 400, 401, 422]);
+      });

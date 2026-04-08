@@ -1,0 +1,50 @@
+$kind: http-request
+name: Get Project Analytics
+method: GET
+url: '{{baseUrl}}/api/projects/{{projectId}}/analytics'
+order: 5000
+description: |-
+  Returns aggregated hours and earnings for the project, split into the **current** and **previous**
+  periods for comparison. The caller must be a member of the project.
+
+  **Query parameters**
+  - `period`: `week` | `month` | `year` (default: `week`)
+
+  **Response `200`** – analytics object with `project`, `period`, `current`, and `previous` keys.
+  **Response `400`** – if `period` is not one of the accepted values.
+  **Response `404`** – if the project is not found or the caller is not a member.
+queryParams:
+  - key: period
+    value: '{{period}}'
+    description: 'Time window: week | month | year'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Analytics response has required top-level keys', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('project');
+          pm.expect(body).to.have.property('period');
+          pm.expect(body).to.have.property('current');
+          pm.expect(body).to.have.property('previous');
+      });
+
+      pm.test('current and previous have data arrays', function () {
+          const body = pm.response.json();
+          pm.expect(body.current).to.have.property('data').that.is.an('array');
+          pm.expect(body.previous).to.have.property('data').that.is.an('array');
+      });
+
+      pm.test('current has totalHours and totalEarnings', function () {
+          const current = pm.response.json().current;
+          pm.expect(current).to.have.property('totalHours');
+          pm.expect(current).to.have.property('totalEarnings');
+      });

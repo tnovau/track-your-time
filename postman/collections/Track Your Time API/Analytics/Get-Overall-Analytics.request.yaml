@@ -1,0 +1,78 @@
+$kind: http-request
+name: Get Overall Analytics
+method: GET
+url: '{{baseUrl}}/api/analytics'
+order: 1000
+description: |-
+  Returns aggregated time and earnings data for **all** projects the authenticated user is a
+  member of, within a single period window. Useful for cross-project charts and pie/donut
+  breakdowns.
+
+  **Query parameters**
+  - `period`: `week` | `month` | `year` (default: `month`)
+
+  **Response `200`** – analytics object with:
+  - `period` – the active period string.
+  - `start` / `end` – ISO 8601 window boundaries (`start` inclusive, `end` exclusive).
+  - `labels` – bucket label array (e.g. `["Wk 1", "Wk 2", ...]`).
+  - `projects` – per-project totals (`id`, `name`, `color`, `hours`, `earnings`).
+  - `series` – per-project arrays indexed by `labels` with `hours[]` and `earnings[]`.
+
+  **Response `400`** – if `period` is not one of the accepted values.
+queryParams:
+  - key: period
+    value: '{{period}}'
+    description: 'Time window: week | month | year'
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Analytics response has required top-level keys', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.have.property('period');
+          pm.expect(body).to.have.property('start');
+          pm.expect(body).to.have.property('end');
+          pm.expect(body).to.have.property('labels');
+          pm.expect(body).to.have.property('projects');
+          pm.expect(body).to.have.property('series');
+      });
+
+      pm.test('labels is an array', function () {
+          pm.expect(pm.response.json().labels).to.be.an('array');
+      });
+
+      pm.test('projects is an array', function () {
+          pm.expect(pm.response.json().projects).to.be.an('array');
+      });
+
+      pm.test('series is an array', function () {
+          pm.expect(pm.response.json().series).to.be.an('array');
+      });
+
+      pm.test('Each project entry has required fields', function () {
+          pm.response.json().projects.forEach(function (project) {
+              pm.expect(project).to.have.property('id');
+              pm.expect(project).to.have.property('name');
+              pm.expect(project).to.have.property('color');
+              pm.expect(project).to.have.property('hours');
+              pm.expect(project).to.have.property('earnings');
+          });
+      });
+
+      pm.test('Each series entry has hours and earnings arrays', function () {
+          const body = pm.response.json();
+          body.series.forEach(function (s) {
+              pm.expect(s).to.have.property('hours').that.is.an('array');
+              pm.expect(s).to.have.property('earnings').that.is.an('array');
+              pm.expect(s.hours.length).to.eql(body.labels.length);
+              pm.expect(s.earnings.length).to.eql(body.labels.length);
+          });
+      });

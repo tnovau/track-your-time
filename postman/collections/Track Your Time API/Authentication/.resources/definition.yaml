@@ -1,0 +1,10 @@
+$kind: collection
+name: Authentication
+description: |-
+  Better Auth exposes its own endpoints under `/api/auth/*`. These are handled automatically by
+  the catch-all route in the Next.js app. Replace the `*` wildcard with the specific Better Auth
+  path you need (e.g. `session`, `sign-in/email`, `sign-up/email`, `sign-out`).
+
+  Because the exact routes are library-managed, tests here are intentionally minimal — they only
+  assert that the server handled the request (any 2xx/3xx/4xx is acceptable).
+order: 1000

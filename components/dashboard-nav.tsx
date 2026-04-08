@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navLinks = [
   { href: "/dashboard", label: "Time Tracker" },
   { href: "/projects", label: "Projects" },
+  { href: "/analytics", label: "Analytics" },
 ];
 
 export default function DashboardNav() {
@@ -14,7 +15,7 @@ export default function DashboardNav() {
   return (
     <nav className="flex gap-1">
       {navLinks.map(({ href, label }) => {
-        const isActive = pathname === href;
+        const isActive = pathname === href || pathname.startsWith(href + "/");
         return (
           <Link
             key={href}

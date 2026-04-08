@@ -1,0 +1,51 @@
+$kind: http-request
+name: Create Project
+method: POST
+url: '{{baseUrl}}/api/projects'
+order: 2000
+description: |-
+  Creates a new project. The authenticated user is automatically assigned the **Admin** role.
+
+  `description`, `color`, `currency`, and `hourlyRate` are all optional.
+  `currency` is a free-form string (e.g. `€`, `$`, `GBP`).
+  `hourlyRate` is a positive number representing the billing rate per hour.
+
+  **Response `201`** – the created project object.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "My Project",
+      "description": "Optional description",
+      "color": "#6366f1",
+      "currency": "€",
+      "hourlyRate": 75
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Created project has required fields', function () {
+          const project = pm.response.json();
+          pm.expect(project).to.have.property('id');
+          pm.expect(project).to.have.property('name');
+          pm.expect(project.name).to.be.a('string').and.not.empty;
+      });
+
+      // Persist the new project ID for downstream requests.
+      const project = pm.response.json();
+      if (project && project.id) {
+          pm.collectionVariables.set('projectId', project.id);
+          console.log('projectId set to', project.id);
+      }

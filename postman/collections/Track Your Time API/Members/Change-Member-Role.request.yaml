@@ -1,0 +1,45 @@
+$kind: http-request
+name: Change Member Role
+method: PATCH
+url: '{{baseUrl}}/api/projects/{{projectId}}/members/{{memberId}}'
+order: 3000
+description: |-
+  Changes the role of an existing project member. Requires **Admin** role.
+
+  - `role` must be one of `ADMIN`, `TRACKER`, `READER`.
+  - The last remaining Admin cannot be demoted (self-demotion blocked).
+
+  **Response `200`** – the updated `ProjectMember` object.
+  **Response `400`** – if the role value is invalid, or the caller is the only remaining Admin.
+  **Response `403`** – if the caller does not have Admin role.
+  **Response `404`** – if the project or member is not found.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "role": "READER"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Updated member has required fields', function () {
+          const member = pm.response.json();
+          pm.expect(member).to.have.property('id');
+          pm.expect(member).to.have.property('role');
+      });
+
+      pm.test('Role was updated to READER', function () {
+          pm.expect(pm.response.json().role).to.eql('READER');
+      });

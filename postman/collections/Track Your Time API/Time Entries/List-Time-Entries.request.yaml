@@ -1,0 +1,70 @@
+$kind: http-request
+name: List Time Entries
+method: GET
+url: '{{baseUrl}}/api/time-entries'
+order: 1000
+description: |-
+  Returns time entries for the authenticated user.
+
+  **Query parameters** (all optional)
+  - `projectId` – filter by project. Use `none` for entries with no project, or a project ID for
+    entries belonging to a specific project. When filtering by a shared project, entries from
+    **all members** of that project are returned.
+  - `dateFrom` – return entries whose `startTime` is on or after this ISO 8601 timestamp.
+  - `dateTo` – return entries whose `startTime` is on or before this ISO 8601 timestamp.
+
+  **Behaviour notes**
+  - No filter → returns the **50 most recent** entries.
+  - Any filter active → 50-entry cap is lifted; all matching entries are returned.
+  - The currently running entry (if any) is always included when a filter is active.
+
+  **Response `200`** – array of time entry objects. A running entry has `endTime: null` and
+  `duration: null`.
+queryParams:
+  - key: projectId
+    value: '{{projectFilterId}}'
+    description: 'Filter by project ID, or use "none" for unassigned entries.'
+    disabled: true
+  - key: dateFrom
+    value: '{{dateFrom}}'
+    description: ISO 8601 lower bound for startTime.
+    disabled: true
+  - key: dateTo
+    value: '{{dateTo}}'
+    description: ISO 8601 upper bound for startTime.
+    disabled: true
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON array', function () {
+          pm.expect(pm.response.json()).to.be.an('array');
+      });
+
+      pm.test('Each entry has required fields', function () {
+          pm.response.json().forEach(function (entry) {
+              pm.expect(entry).to.have.property('id');
+              pm.expect(entry).to.have.property('startTime');
+              pm.expect(entry).to.have.property('endTime');
+              pm.expect(entry).to.have.property('duration');
+          });
+      });
+
+      pm.test('Running entries have null endTime and null duration', function () {
+          pm.response.json().forEach(function (entry) {
+              if (entry.endTime === null) {
+                  pm.expect(entry.duration).to.be.null;
+              }
+          });
+      });
+
+      // Persist the first entry ID for downstream requests if not already set.
+      const entries = pm.response.json();
+      if (entries.length > 0 && !pm.collectionVariables.get('timeEntryId')) {
+          pm.collectionVariables.set('timeEntryId', entries[0].id);
+          console.log('timeEntryId set to', entries[0].id);
+      }
