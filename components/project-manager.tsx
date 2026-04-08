@@ -166,7 +166,8 @@ function MembersManager({ project, onClose }: MembersManagerProps) {
       if (res.ok) {
         setMembers(await res.json());
       } else {
-        setError("Failed to load members.");
+        const data = await res.json().catch(() => ({}));
+        setError(data.error ?? `Failed to load members (HTTP ${res.status}).`);
       }
     } finally {
       setLoading(false);

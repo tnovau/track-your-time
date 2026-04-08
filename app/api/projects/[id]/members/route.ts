@@ -48,11 +48,15 @@ export async function POST(
   const { id } = await params;
 
   const requesterMembership = await prisma.projectMember.findFirst({
-    where: { projectId: id, userId: session.user.id, role: "ADMIN" },
+    where: { projectId: id, userId: session.user.id },
   });
 
   if (!requesterMembership) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  if (requesterMembership.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();

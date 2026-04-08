@@ -3,12 +3,6 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
-async function getAdminMembership(projectId: string, userId: string) {
-  return prisma.projectMember.findFirst({
-    where: { projectId, userId, role: "ADMIN" },
-  });
-}
-
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -20,9 +14,24 @@ export async function PATCH(
 
   const { id } = await params;
 
-  const membership = await getAdminMembership(id, session.user.id);
-  if (!membership) {
+  // Fetch the project with the caller's membership in one query
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      members: {
+        where: { userId: session.user.id },
+        take: 1,
+      },
+    },
+  });
+
+  if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  const membership = project.members[0];
+  if (!membership || membership.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -33,11 +42,6 @@ export async function PATCH(
 
   if (body.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(body.color)) {
     return NextResponse.json({ error: "Invalid color format" }, { status: 400 });
-  }
-
-  const project = await prisma.project.findUnique({ where: { id } });
-  if (!project) {
-    return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
   const updated = await prisma.project.update({
@@ -66,17 +70,20 @@ export async function DELETE(
 
   const { id } = await params;
 
-  // Only the project owner (ADMIN who created the project) can delete it
-  const project = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
-  });
+  // Only the project owner (original creator) can delete the project
+  const project = await prisma.project.findUnique({ where: { id } });
 
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  if (project.userId !== session.user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   await prisma.project.delete({ where: { id } });
 
   return new NextResponse(null, { status: 204 });
 }
+
 

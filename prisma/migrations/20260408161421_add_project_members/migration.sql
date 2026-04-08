@@ -29,6 +29,8 @@ ALTER TABLE "ProjectMember" ADD CONSTRAINT "ProjectMember_projectId_fkey" FOREIG
 ALTER TABLE "ProjectMember" ADD CONSTRAINT "ProjectMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Backfill: give existing project owners an ADMIN membership
+-- Note: gen_random_uuid() produces UUID-format IDs here; new records created
+-- by the application will use Prisma's cuid() format. Both are valid text PKs.
 INSERT INTO "ProjectMember" ("id", "projectId", "userId", "role", "createdAt", "updatedAt")
 SELECT
     gen_random_uuid()::text,

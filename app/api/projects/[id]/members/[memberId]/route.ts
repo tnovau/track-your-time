@@ -18,11 +18,15 @@ export async function PATCH(
   const { id, memberId } = await params;
 
   const requesterMembership = await prisma.projectMember.findFirst({
-    where: { projectId: id, userId: session.user.id, role: "ADMIN" },
+    where: { projectId: id, userId: session.user.id },
   });
 
   if (!requesterMembership) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  if (requesterMembership.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const targetMembership = await prisma.projectMember.findFirst({
@@ -78,10 +82,6 @@ export async function DELETE(
 
   const { id, memberId } = await params;
 
-  const requesterMembership = await prisma.projectMember.findFirst({
-    where: { projectId: id, userId: session.user.id, role: "ADMIN" },
-  });
-
   const targetMembership = await prisma.projectMember.findFirst({
     where: { id: memberId, projectId: id },
   });
@@ -90,9 +90,20 @@ export async function DELETE(
     return NextResponse.json({ error: "Member not found" }, { status: 404 });
   }
 
-  // Users can remove themselves (leave project), admins can remove anyone
   const isSelf = targetMembership.userId === session.user.id;
-  if (!requesterMembership && !isSelf) {
+
+  const requesterMembership = await prisma.projectMember.findFirst({
+    where: { projectId: id, userId: session.user.id },
+  });
+
+  if (!requesterMembership) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  const isAdmin = requesterMembership.role === "ADMIN";
+
+  // Users can remove themselves (leave project), admins can remove anyone
+  if (!isAdmin && !isSelf) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
