@@ -3,6 +3,12 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
 
+async function getAdminMembership(projectId: string, userId: string) {
+  return prisma.projectMember.findFirst({
+    where: { projectId, userId, role: "ADMIN" },
+  });
+}
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -14,11 +20,8 @@ export async function PATCH(
 
   const { id } = await params;
 
-  const project = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
-  });
-
-  if (!project) {
+  const membership = await getAdminMembership(id, session.user.id);
+  if (!membership) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
@@ -30,6 +33,11 @@ export async function PATCH(
 
   if (body.color !== undefined && !/^#[0-9a-fA-F]{6}$/.test(body.color)) {
     return NextResponse.json({ error: "Invalid color format" }, { status: 400 });
+  }
+
+  const project = await prisma.project.findUnique({ where: { id } });
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
   const updated = await prisma.project.update({
@@ -58,6 +66,7 @@ export async function DELETE(
 
   const { id } = await params;
 
+  // Only the project owner (ADMIN who created the project) can delete it
   const project = await prisma.project.findFirst({
     where: { id, userId: session.user.id },
   });
@@ -70,3 +79,4 @@ export async function DELETE(
 
   return new NextResponse(null, { status: 204 });
 }
+

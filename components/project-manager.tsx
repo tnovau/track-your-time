@@ -2,11 +2,26 @@
 
 import { useState, useEffect, useCallback } from "react";
 
+type ProjectRole = "ADMIN" | "TRACKER" | "READER";
+
 interface Project {
   id: string;
   name: string;
   description: string | null;
   color: string;
+  userId: string;
+  role: ProjectRole;
+}
+
+interface ProjectMember {
+  id: string;
+  role: ProjectRole;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  };
 }
 
 interface ProjectFormState {
@@ -27,6 +42,18 @@ const PRESET_COLORS = [
   "#8b5cf6",
   "#14b8a6",
 ];
+
+const ROLE_LABELS: Record<ProjectRole, string> = {
+  ADMIN: "Admin",
+  TRACKER: "Tracker",
+  READER: "Reader",
+};
+
+const ROLE_COLORS: Record<ProjectRole, string> = {
+  ADMIN: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300",
+  TRACKER: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300",
+  READER: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+};
 
 function emptyForm(): ProjectFormState {
   return { name: "", description: "", color: DEFAULT_COLOR };
@@ -117,6 +144,214 @@ function ProjectForm({
   );
 }
 
+interface MembersManagerProps {
+  project: Project;
+  onClose: () => void;
+}
+
+function MembersManager({ project, onClose }: MembersManagerProps) {
+  const [members, setMembers] = useState<ProjectMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<ProjectRole>("READER");
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+
+  const fetchMembers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/members`);
+      if (res.ok) {
+        setMembers(await res.json());
+      } else {
+        setError("Failed to load members.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [project.id]);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  const handleInvite = async () => {
+    setInviteError(null);
+    if (!inviteEmail.trim()) {
+      setInviteError("Email is required.");
+      return;
+    }
+    setInviteLoading(true);
+    try {
+      const res = await fetch(`/api/projects/${project.id}/members`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+      });
+      if (res.ok) {
+        setInviteEmail("");
+        setInviteRole("READER");
+        await fetchMembers();
+      } else {
+        const data = await res.json();
+        setInviteError(data.error ?? "Failed to invite member.");
+      }
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (memberId: string, role: ProjectRole) => {
+    const res = await fetch(
+      `/api/projects/${project.id}/members/${memberId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role }),
+      }
+    );
+    if (res.ok) {
+      await fetchMembers();
+    } else {
+      const data = await res.json();
+      alert(data.error ?? "Failed to update role.");
+    }
+  };
+
+  const handleRemove = async (memberId: string) => {
+    if (!confirm("Remove this member from the project?")) return;
+    const res = await fetch(
+      `/api/projects/${project.id}/members/${memberId}`,
+      { method: "DELETE" }
+    );
+    if (res.ok || res.status === 204) {
+      await fetchMembers();
+    } else {
+      const data = await res.json();
+      alert(data.error ?? "Failed to remove member.");
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span
+            className="h-3 w-3 rounded-full shrink-0"
+            style={{ backgroundColor: project.color }}
+          />
+          <h3 className="text-sm font-semibold">
+            Members — {project.name}
+          </h3>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+          aria-label="Close members panel"
+        >
+          Close
+        </button>
+      </div>
+
+      {/* Invite form */}
+      {project.role === "ADMIN" && (
+        <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-3">
+          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            Invite member
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <input
+              type="email"
+              placeholder="Email address"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="flex-1 min-w-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as ProjectRole)}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="READER">Reader</option>
+              <option value="TRACKER">Tracker</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+            <button
+              onClick={handleInvite}
+              disabled={inviteLoading}
+              className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+            >
+              {inviteLoading ? "Inviting…" : "Invite"}
+            </button>
+          </div>
+          {inviteError && <p className="text-xs text-red-500">{inviteError}</p>}
+        </div>
+      )}
+
+      {/* Members list */}
+      <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-3">
+        {loading && (
+          <p className="text-sm text-gray-400">Loading members…</p>
+        )}
+        {!loading && error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+        {!loading && !error && members.length === 0 && (
+          <p className="text-sm text-gray-400">No members yet.</p>
+        )}
+        {!loading &&
+          members.map((member) => (
+            <div
+              key={member.id}
+              className="flex items-center justify-between gap-2"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {member.user.name || member.user.email}
+                </p>
+                <p className="text-xs text-gray-400 truncate">
+                  {member.user.email}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {project.role === "ADMIN" ? (
+                  <select
+                    value={member.role}
+                    onChange={(e) =>
+                      handleRoleChange(member.id, e.target.value as ProjectRole)
+                    }
+                    className="rounded border border-gray-200 dark:border-gray-700 bg-transparent text-xs px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="READER">Reader</option>
+                    <option value="TRACKER">Tracker</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                ) : (
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_COLORS[member.role]}`}
+                  >
+                    {ROLE_LABELS[member.role]}
+                  </span>
+                )}
+                {project.role === "ADMIN" && (
+                  <button
+                    onClick={() => handleRemove(member.id)}
+                    className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                    aria-label={`Remove ${member.user.name || member.user.email}`}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectManager() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [fetching, setFetching] = useState(true);
@@ -128,6 +363,7 @@ export default function ProjectManager() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<ProjectFormState>(emptyForm());
   const [editError, setEditError] = useState<string | null>(null);
+  const [managingMembersId, setManagingMembersId] = useState<string | null>(null);
 
   const fetchProjects = useCallback(async () => {
     setFetching(true);
@@ -286,61 +522,87 @@ export default function ProjectManager() {
             No projects yet. Create one to organize your time entries.
           </p>
         )}
-        {!fetching && projects.map((project) =>
-          editingId === project.id ? (
-            <div
-              key={project.id}
-              className="rounded-lg border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3"
-            >
-              <ProjectForm
-                form={editForm}
-                onChange={setEditForm}
-                error={editError}
-                loading={loading}
-                submitLabel="Save"
-                onSubmit={() => handleEditSave(project.id)}
-                onCancel={handleEditCancel}
-              />
-            </div>
-          ) : (
-            <div
-              key={project.id}
-              className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <span
-                  className="h-3 w-3 rounded-full shrink-0"
-                  style={{ backgroundColor: project.color }}
+        {!fetching && projects.map((project) => (
+          <div key={project.id}>
+            {editingId === project.id ? (
+              <div className="rounded-lg border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3">
+                <ProjectForm
+                  form={editForm}
+                  onChange={setEditForm}
+                  error={editError}
+                  loading={loading}
+                  submitLabel="Save"
+                  onSubmit={() => handleEditSave(project.id)}
+                  onCancel={handleEditCancel}
                 />
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{project.name}</p>
-                  {project.description && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {project.description}
-                    </p>
-                  )}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="h-3 w-3 rounded-full shrink-0"
+                      style={{ backgroundColor: project.color }}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{project.name}</p>
+                      {project.description && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {project.description}
+                        </p>
+                      )}
+                    </div>
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${ROLE_COLORS[project.role]}`}
+                    >
+                      {ROLE_LABELS[project.role]}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button
+                      onClick={() =>
+                        setManagingMembersId(
+                          managingMembersId === project.id ? null : project.id
+                        )
+                      }
+                      className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                      aria-label="Manage members"
+                    >
+                      Members
+                    </button>
+                    {project.role === "ADMIN" && (
+                      <>
+                        <button
+                          onClick={() => handleEditStart(project)}
+                          className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                          aria-label="Edit project"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(project.id)}
+                          disabled={loading}
+                          className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-60"
+                          aria-label="Delete project"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  onClick={() => handleEditStart(project)}
-                  className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-                  aria-label="Edit project"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  disabled={loading}
-                  className="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors disabled:opacity-60"
-                  aria-label="Delete project"
-                >
-                  Delete
-                </button>
+            )}
+            {managingMembersId === project.id && (
+              <div className="mt-1">
+                <MembersManager
+                  project={project}
+                  onClose={() => setManagingMembersId(null)}
+                />
               </div>
-            </div>
-          )
-        )}
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

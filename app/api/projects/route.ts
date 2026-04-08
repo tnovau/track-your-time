@@ -9,10 +9,27 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const projects = await prisma.project.findMany({
+  const memberships = await prisma.projectMember.findMany({
     where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
+    include: {
+      project: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          color: true,
+          userId: true,
+          createdAt: true,
+        },
+      },
+    },
+    orderBy: { project: { createdAt: "desc" } },
   });
+
+  const projects = memberships.map((m) => ({
+    ...m.project,
+    role: m.role,
+  }));
 
   return NextResponse.json(projects);
 }
@@ -30,8 +47,15 @@ export async function POST(req: NextRequest) {
       description: body.description ?? null,
       color: body.color ?? "#6366f1",
       userId: session.user.id,
+      members: {
+        create: {
+          userId: session.user.id,
+          role: "ADMIN",
+        },
+      },
     },
   });
 
   return NextResponse.json(project, { status: 201 });
 }
+

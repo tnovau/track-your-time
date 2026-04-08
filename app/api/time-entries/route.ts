@@ -21,11 +21,25 @@ export async function GET(req: NextRequest) {
   if (!isFiltered) {
     entries = await prisma.timeEntry.findMany({
       where: { userId: session.user.id },
-      include: { project: { select: { id: true, name: true, color: true } } },
+      include: {
+        project: { select: { id: true, name: true, color: true } },
+        user: { select: { id: true, name: true, email: true } },
+      },
       orderBy: { startTime: "desc" },
       take: 50,
     });
   } else {
+    // When filtering by a specific shared project, show all members' entries
+    let sharedProjectId: string | null = null;
+    if (projectFilter && projectFilter !== "none") {
+      const membership = await prisma.projectMember.findFirst({
+        where: { projectId: projectFilter, userId: session.user.id },
+      });
+      if (membership) {
+        sharedProjectId = projectFilter;
+      }
+    }
+
     // Build conditions for completed entries
     const completedConditions: Prisma.TimeEntryWhereInput = {
       endTime: { not: null },
@@ -33,6 +47,8 @@ export async function GET(req: NextRequest) {
 
     if (projectFilter === "none") {
       completedConditions.projectId = null;
+    } else if (sharedProjectId) {
+      completedConditions.projectId = sharedProjectId;
     } else if (projectFilter) {
       completedConditions.projectId = projectFilter;
     }
@@ -44,19 +60,41 @@ export async function GET(req: NextRequest) {
       completedConditions.startTime = startTimeFilter;
     }
 
-    // Always include the running entry so the timer stays accurate
-    entries = await prisma.timeEntry.findMany({
-      where: {
-        userId: session.user.id,
-        OR: [{ endTime: null }, completedConditions],
-      },
-      include: { project: { select: { id: true, name: true, color: true } } },
-      orderBy: { startTime: "desc" },
-    });
+    if (sharedProjectId) {
+      // For shared projects, include entries from all members
+      // but still show the current user's running entry
+      entries = await prisma.timeEntry.findMany({
+        where: {
+          OR: [
+            { userId: session.user.id, endTime: null },
+            completedConditions,
+          ],
+        },
+        include: {
+          project: { select: { id: true, name: true, color: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { startTime: "desc" },
+      });
+    } else {
+      // Always include the running entry so the timer stays accurate
+      entries = await prisma.timeEntry.findMany({
+        where: {
+          userId: session.user.id,
+          OR: [{ endTime: null }, completedConditions],
+        },
+        include: {
+          project: { select: { id: true, name: true, color: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { startTime: "desc" },
+      });
+    }
   }
 
   return NextResponse.json(entries);
 }
+
 
 export async function POST(req: NextRequest) {
   const session = await auth.api.getSession({ headers: await headers() });
