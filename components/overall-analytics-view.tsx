@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   BarChart,
   Bar,
@@ -372,8 +373,9 @@ export default function OverallAnalyticsView() {
           const total = metric === "hours" ? totalHours : totalEarnings;
           const pct = total > 0 ? (value / total) * 100 : 0;
           return (
-            <div
+            <Link
               key={p.id}
+              href={`/projects/${p.id}`}
               className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-2.5"
             >
               <span
@@ -395,7 +397,7 @@ export default function OverallAnalyticsView() {
                   {pct.toFixed(0)}%
                 </span>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
