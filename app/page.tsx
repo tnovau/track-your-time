@@ -1,4 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Track Your Time – Simple & Powerful Time Tracking",
+  description:
+    "Log your work, manage projects, and gain insights into how you spend your time. Get started for free with Track Your Time.",
+  openGraph: {
+    title: "Track Your Time – Simple & Powerful Time Tracking",
+    description:
+      "Log your work, manage projects, and gain insights into how you spend your time. Get started for free.",
+  },
+  twitter: {
+    title: "Track Your Time – Simple & Powerful Time Tracking",
+    description:
+      "Log your work, manage projects, and gain insights into how you spend your time. Get started for free.",
+  },
+};
 
 export default function Home() {
   return (
