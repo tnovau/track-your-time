@@ -259,8 +259,8 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
       : null;
 
   const billingLabel =
-    billingAmount != null && filteredProject
-      ? `${filteredProject.currency ?? ""}${billingAmount.toFixed(2)}`
+    billingAmount != null && filteredProject?.currency
+      ? `${filteredProject.currency}${billingAmount.toFixed(2)}`
       : null;
 
   return (

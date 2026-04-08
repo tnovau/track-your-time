@@ -584,7 +584,7 @@ export default function ProjectManager() {
                       )}
                       {project.hourlyRate != null && (
                         <p className="text-xs text-gray-400 dark:text-gray-500">
-                          {project.currency ? `${project.currency} ` : ""}{project.hourlyRate}/hr
+                          {project.currency ? `${project.currency} ` : ""}{project.hourlyRate.toFixed(2)}/hr
                         </p>
                       )}
                     </div>
