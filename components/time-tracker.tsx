@@ -16,6 +16,8 @@ interface Project {
   id: string;
   name: string;
   color: string;
+  currency: string | null;
+  hourlyRate: number | null;
 }
 
 interface TimeTrackerProps {
@@ -246,6 +248,21 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
 
   const totalFiltered = entries.reduce((acc, e) => acc + (e.duration ?? 0), 0);
 
+  const filteredProject =
+    filterProjectId && filterProjectId !== "none"
+      ? projects.find((p) => p.id === filterProjectId) ?? null
+      : null;
+
+  const billingAmount =
+    filteredProject && filteredProject.hourlyRate != null
+      ? (totalFiltered / 3600) * filteredProject.hourlyRate
+      : null;
+
+  const billingLabel =
+    billingAmount != null && filteredProject
+      ? `${filteredProject.currency ?? ""}${billingAmount.toFixed(2)}`
+      : null;
+
   return (
     <div className="space-y-6">
       {/* Timer Bar */}
@@ -305,6 +322,11 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           {isFilterActive && (
             <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
               Total: {formatDuration(totalFiltered)}
+            </span>
+          )}
+          {billingLabel && (
+            <span className="font-mono text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              {billingLabel}
             </span>
           )}
           <button

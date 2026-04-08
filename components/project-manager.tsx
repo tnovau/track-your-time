@@ -9,6 +9,8 @@ interface Project {
   name: string;
   description: string | null;
   color: string;
+  currency: string | null;
+  hourlyRate: number | null;
   userId: string;
   role: ProjectRole;
 }
@@ -28,6 +30,8 @@ interface ProjectFormState {
   name: string;
   description: string;
   color: string;
+  currency: string;
+  hourlyRate: string;
 }
 
 const DEFAULT_COLOR = "#6366f1";
@@ -56,7 +60,7 @@ const ROLE_COLORS: Record<ProjectRole, string> = {
 };
 
 function emptyForm(): ProjectFormState {
-  return { name: "", description: "", color: DEFAULT_COLOR };
+  return { name: "", description: "", color: DEFAULT_COLOR, currency: "", hourlyRate: "" };
 }
 
 function validateName(name: string): string | null {
@@ -121,6 +125,26 @@ function ProjectForm({
           onChange={(e) => onChange({ ...form, color: e.target.value })}
           className="h-6 w-6 rounded cursor-pointer border border-gray-200 dark:border-gray-700"
           aria-label="Custom color"
+        />
+      </div>
+      <div className="flex gap-3">
+        <input
+          type="text"
+          placeholder="Currency symbol (e.g. €, $)"
+          value={form.currency}
+          onChange={(e) => onChange({ ...form, currency: e.target.value })}
+          className="w-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          aria-label="Currency symbol"
+        />
+        <input
+          type="number"
+          placeholder="Price per hour (optional)"
+          value={form.hourlyRate}
+          min="0"
+          step="0.01"
+          onChange={(e) => onChange({ ...form, hourlyRate: e.target.value })}
+          className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          aria-label="Price per hour"
         />
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
@@ -398,6 +422,8 @@ export default function ProjectManager() {
           name: createForm.name.trim(),
           description: createForm.description.trim() || null,
           color: createForm.color,
+          currency: createForm.currency.trim() || null,
+          hourlyRate: createForm.hourlyRate !== "" ? Number(createForm.hourlyRate) : null,
         }),
       });
       if (res.ok) {
@@ -419,6 +445,8 @@ export default function ProjectManager() {
       name: project.name,
       description: project.description ?? "",
       color: project.color,
+      currency: project.currency ?? "",
+      hourlyRate: project.hourlyRate != null ? String(project.hourlyRate) : "",
     });
     setEditError(null);
   };
@@ -441,6 +469,8 @@ export default function ProjectManager() {
           name: editForm.name.trim(),
           description: editForm.description.trim() || null,
           color: editForm.color,
+          currency: editForm.currency.trim() || null,
+          hourlyRate: editForm.hourlyRate !== "" ? Number(editForm.hourlyRate) : null,
         }),
       });
       if (res.ok) {
@@ -550,6 +580,11 @@ export default function ProjectManager() {
                       {project.description && (
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                           {project.description}
+                        </p>
+                      )}
+                      {project.hourlyRate != null && (
+                        <p className="text-xs text-gray-400 dark:text-gray-500">
+                          {project.currency ? `${project.currency} ` : ""}{project.hourlyRate}/hr
                         </p>
                       )}
                     </div>

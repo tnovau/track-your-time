@@ -18,6 +18,8 @@ export async function GET() {
           name: true,
           description: true,
           color: true,
+          currency: true,
+          hourlyRate: true,
           userId: true,
           createdAt: true,
         },
@@ -46,6 +48,8 @@ export async function POST(req: NextRequest) {
       name: body.name,
       description: body.description ?? null,
       color: body.color ?? "#6366f1",
+      currency: body.currency ?? null,
+      hourlyRate: body.hourlyRate != null ? Number(body.hourlyRate) : null,
       userId: session.user.id,
       members: {
         create: {

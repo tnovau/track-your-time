@@ -53,6 +53,14 @@ export async function PATCH(
           ? body.description?.trim() || null
           : project.description,
       color: body.color !== undefined ? body.color : project.color,
+      currency:
+        body.currency !== undefined ? body.currency?.trim() || null : project.currency,
+      hourlyRate:
+        body.hourlyRate !== undefined
+          ? body.hourlyRate != null
+            ? Number(body.hourlyRate)
+            : null
+          : project.hourlyRate,
     },
   });
 
