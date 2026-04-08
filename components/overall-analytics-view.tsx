@@ -16,6 +16,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatHours } from "@/lib/format";
 
 type Period = "week" | "month" | "year";
 type ChartType = "bar" | "line" | "pie";
@@ -53,14 +54,6 @@ const PERIOD_LABELS: Record<Period, string> = {
   month: "This Month",
   year: "This Year",
 };
-
-function formatHours(h: number): string {
-  const hrs = Math.floor(h);
-  const mins = Math.round((h - hrs) * 60);
-  if (hrs === 0) return `${mins}m`;
-  if (mins === 0) return `${hrs}h`;
-  return `${hrs}h ${mins}m`;
-}
 
 interface CustomTooltipProps {
   active?: boolean;

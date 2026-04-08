@@ -13,6 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatHours } from "@/lib/format";
 
 type Period = "week" | "month" | "year";
 type ChartType = "bar" | "line";
@@ -62,23 +63,16 @@ const PREV_PERIOD_LABELS: Record<Period, string> = {
 };
 
 function formatPeriodRange(start: string, end: string, period: Period): string {
-  const s = new Date(start);
-  const e = new Date(end);
-  e.setDate(e.getDate() - 1); // end is exclusive
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  endDate.setDate(endDate.getDate() - 1); // end is exclusive
   if (period === "year") {
-    return s.getFullYear().toString();
+    return startDate.getFullYear().toString();
   }
   const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-  return `${s.toLocaleDateString(undefined, opts)} – ${e.toLocaleDateString(undefined, opts)}`;
+  return `${startDate.toLocaleDateString(undefined, opts)} – ${endDate.toLocaleDateString(undefined, opts)}`;
 }
 
-function formatHours(h: number): string {
-  const hrs = Math.floor(h);
-  const mins = Math.round((h - hrs) * 60);
-  if (hrs === 0) return `${mins}m`;
-  if (mins === 0) return `${hrs}h`;
-  return `${hrs}h ${mins}m`;
-}
 
 function DeltaBadge({ current, previous }: { current: number; previous: number }) {
   if (previous === 0 && current === 0) return null;
