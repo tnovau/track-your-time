@@ -19,16 +19,21 @@ track-your-time/
 │   ├── api/
 │   │   ├── auth/[...all]/       # Better Auth catch-all handler
 │   │   ├── projects/            # CRUD for projects
+│   │   │   └── [id]/
+│   │   │       ├── members/     # Project member management
+│   │   │       └── members/[memberId]/  # Per-member role & removal
 │   │   └── time-entries/        # CRUD for time entries
 │   │       └── [id]/stop/       # PATCH to stop a running entry
 │   ├── dashboard/               # Protected dashboard page
+│   ├── projects/                # Protected projects page
 │   ├── sign-in/                 # Sign-in page
 │   ├── generated/prisma/        # Auto-generated Prisma client (git-ignored)
 │   ├── globals.css
 │   ├── layout.tsx
 │   └── page.tsx                 # Landing page
 ├── components/
-│   └── time-tracker.tsx         # Client component for the timer UI
+│   ├── time-tracker.tsx         # Client component for the timer UI
+│   └── project-manager.tsx      # Client component for project & member management
 ├── docs/                        # Project documentation
 ├── lib/
 │   ├── auth.ts                  # Better Auth server-side instance

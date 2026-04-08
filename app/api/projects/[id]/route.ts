@@ -14,12 +14,24 @@ export async function PATCH(
 
   const { id } = await params;
 
-  const project = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
+  // Fetch the project with the caller's membership in one query
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      members: {
+        where: { userId: session.user.id },
+        take: 1,
+      },
+    },
   });
 
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  const membership = project.members[0];
+  if (!membership || membership.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const body = await req.json();
@@ -58,15 +70,28 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const project = await prisma.project.findFirst({
-    where: { id, userId: session.user.id },
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      members: {
+        where: { userId: session.user.id },
+        take: 1,
+      },
+    },
   });
 
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
+  const membership = project.members[0];
+  if (!membership || membership.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   await prisma.project.delete({ where: { id } });
 
   return new NextResponse(null, { status: 204 });
 }
+
+

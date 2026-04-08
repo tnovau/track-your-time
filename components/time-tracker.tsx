@@ -8,6 +8,7 @@ interface TimeEntry {
   startTime: string;
   endTime: string | null;
   duration: number | null;
+  userId: string;
   project: { id: string; name: string; color: string } | null;
 }
 
@@ -602,13 +603,15 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
                 <span className="font-mono text-sm tabular-nums text-gray-500 dark:text-gray-400">
                   {formatDuration(entry.duration ?? 0)}
                 </span>
-                <button
-                  onClick={() => handleEditStart(entry)}
-                  className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
-                  aria-label="Edit entry"
-                >
-                  Edit
-                </button>
+                {entry.userId === userId && (
+                  <button
+                    onClick={() => handleEditStart(entry)}
+                    className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                    aria-label="Edit entry"
+                  >
+                    Edit
+                  </button>
+                )}
               </div>
             </div>
           )

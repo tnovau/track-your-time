@@ -12,13 +12,15 @@ Better Auth exposes its own endpoints under `/api/auth/*`. These are handled aut
 
 ## Projects
 
+> For full details on role-based access and membership management see [Project Sharing](./project-sharing.md).
+
 ### List projects
 
 ```
 GET /api/projects
 ```
 
-Returns all projects belonging to the authenticated user.
+Returns all projects the authenticated user is a **member of**, including their `role` in each project.
 
 **Response `200`**
 ```json
@@ -30,7 +32,7 @@ Returns all projects belonging to the authenticated user.
     "color": "#6366f1",
     "userId": "clyyy",
     "createdAt": "2026-01-01T00:00:00.000Z",
-    "updatedAt": "2026-01-01T00:00:00.000Z"
+    "role": "ADMIN"
   }
 ]
 ```
@@ -51,7 +53,7 @@ Content-Type: application/json
 }
 ```
 
-**Response `201`** – the created project object.
+**Response `201`** – the created project object. The creator is automatically assigned the **Admin** role.
 
 ### Update a project
 
@@ -60,7 +62,7 @@ PATCH /api/projects/:id
 Content-Type: application/json
 ```
 
-Partially updates a project. All fields are optional; omitted fields retain their current values.
+Requires **Admin** role. Partially updates a project. All fields are optional; omitted fields retain their current values.
 
 **Request body**
 ```json
@@ -78,7 +80,9 @@ Partially updates a project. All fields are optional; omitted fields retain thei
 
 **Response `400`** if `name` is empty or `color` format is invalid.
 
-**Response `404`** if the project is not found or does not belong to the authenticated user.
+**Response `403`** if the caller does not have Admin role.
+
+**Response `404`** if the project is not found or the caller is not a member.
 
 ### Delete a project
 
@@ -86,11 +90,22 @@ Partially updates a project. All fields are optional; omitted fields retain thei
 DELETE /api/projects/:id
 ```
 
-Permanently deletes a project. Any time entries that referenced this project will have their `projectId` set to `null` (they are **not** deleted).
+Requires **Admin** role. Permanently deletes a project. Any time entries that referenced this project will have their `projectId` set to `null` (they are **not** deleted).
 
 **Response `204`** – no content.
 
-**Response `404`** if the project is not found or does not belong to the authenticated user.
+**Response `403`** if the caller does not have Admin role.
+
+**Response `404`** if the project is not found or the caller is not a member.
+
+### Member endpoints
+
+See [Project Sharing → API reference](./project-sharing.md#api-reference) for the full member management API:
+
+- `GET /api/projects/:id/members` – list members
+- `POST /api/projects/:id/members` – invite a member by email
+- `PATCH /api/projects/:id/members/:memberId` – change a member's role
+- `DELETE /api/projects/:id/members/:memberId` – remove a member
 
 ## Time Entries
 
@@ -112,9 +127,10 @@ Returns time entries for the authenticated user.
 
 **Behaviour notes**
 
-- When **no filter** is provided, returns the **50 most recent** entries.
+- When **no filter** is provided, returns the **50 most recent** entries for the authenticated user.
 - When **any filter** is active, the 50-entry cap is lifted and all matching entries are returned.
 - The currently running entry (if any) is **always included** when a filter is active, so the live timer is never interrupted.
+- When filtering by a **shared project** (`projectId=<id>`), entries from **all members** of that project are returned (not just the authenticated user's). See [Project Sharing](./project-sharing.md#time-entries-and-shared-projects).
 
 **Response `200`**
 ```json
