@@ -117,6 +117,69 @@ See [Project Sharing → API reference](./project-sharing.md#api-reference) for 
 - `PATCH /api/projects/:id/members/:memberId` – change a member's role
 - `DELETE /api/projects/:id/members/:memberId` – remove a member
 
+### Get project analytics
+
+```
+GET /api/projects/:id/analytics
+```
+
+Returns aggregated hours and earnings for the project, split into the **current** and **previous** periods so they can be compared. The caller must be a member of the project.
+
+**Query parameters**
+
+| Parameter | Values | Default | Description |
+|---|---|---|---|
+| `period` | `week` \| `month` \| `year` | `week` | Determines the time window and bucket granularity. |
+
+**Bucket granularity per period**
+
+| `period` | Current / previous window | Bucket labels |
+|---|---|---|
+| `week` | Mon–Sun of the current / previous ISO week | Mon, Tue, Wed, Thu, Fri, Sat, Sun |
+| `month` | Current / previous calendar month | Wk 1, Wk 2, … (7-day buckets from the 1st) |
+| `year` | Current / previous calendar year | Jan, Feb, …, Dec |
+
+**Response `200`**
+```json
+{
+  "project": {
+    "id": "clxxx",
+    "name": "My Project",
+    "color": "#6366f1",
+    "hourlyRate": 75.00,
+    "currency": "€"
+  },
+  "period": "week",
+  "current": {
+    "start": "2026-04-06T00:00:00.000Z",
+    "end": "2026-04-13T00:00:00.000Z",
+    "data": [
+      { "label": "Mon", "hours": 4.5, "earnings": 337.50 },
+      { "label": "Tue", "hours": 3.0, "earnings": 225.00 }
+    ],
+    "totalHours": 7.5,
+    "totalEarnings": 562.50
+  },
+  "previous": {
+    "start": "2026-03-30T00:00:00.000Z",
+    "end": "2026-04-06T00:00:00.000Z",
+    "data": [
+      { "label": "Mon", "hours": 6.0, "earnings": 450.00 }
+    ],
+    "totalHours": 6.0,
+    "totalEarnings": 450.00
+  }
+}
+```
+
+- `earnings` is `0` for all buckets when the project has no `hourlyRate` set.
+- Only **completed** entries (those with an `endTime`) are included in aggregations.
+- `start` is inclusive; `end` is exclusive.
+
+**Response `400`** if `period` is not one of the accepted values.
+
+**Response `404`** if the project is not found or the caller is not a member.
+
 ## Time Entries
 
 ### List entries
@@ -237,3 +300,63 @@ Sets `endTime` to now and calculates `duration`.
 **Response `200`** – the updated entry object.
 
 **Response `404`** if the entry is not found or already stopped.
+
+## Analytics
+
+### Overall analytics (all projects)
+
+```
+GET /api/analytics
+```
+
+Returns aggregated time and earnings data for **all** projects the authenticated user is a member of, within a single period window. Useful for cross-project charts and pie/donut breakdowns.
+
+**Query parameters**
+
+| Parameter | Values | Default | Description |
+|---|---|---|---|
+| `period` | `week` \| `month` \| `year` | `month` | Determines the time window and bucket granularity (same rules as the per-project endpoint). |
+
+**Response `200`**
+```json
+{
+  "period": "month",
+  "start": "2026-04-01T00:00:00.000Z",
+  "end": "2026-05-01T00:00:00.000Z",
+  "labels": ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5"],
+  "projects": [
+    {
+      "id": "clxxx",
+      "name": "Project A",
+      "color": "#6366f1",
+      "hours": 12.5,
+      "earnings": 937.50
+    },
+    {
+      "id": "clyyy",
+      "name": "Project B",
+      "color": "#10b981",
+      "hours": 4.0,
+      "earnings": 0
+    }
+  ],
+  "series": [
+    {
+      "id": "clxxx",
+      "name": "Project A",
+      "color": "#6366f1",
+      "currency": "€",
+      "hourlyRate": 75.00,
+      "hours": [4.0, 3.5, 3.0, 2.0, 0.0],
+      "earnings": [300.00, 262.50, 225.00, 150.00, 0.0]
+    }
+  ]
+}
+```
+
+- `projects` – per-project totals for the period; useful for pie/donut charts.
+- `series` – per-project arrays indexed by `labels`, one value per bucket; useful for bar/line charts.
+- `earnings` is `0` for buckets / projects without an `hourlyRate`.
+- Only **completed** entries are included.
+
+**Response `400`** if `period` is not one of the accepted values.
