@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 
 type ProjectRole = "ADMIN" | "TRACKER" | "READER";
 
@@ -595,6 +596,13 @@ export default function ProjectManager() {
                     </span>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                      aria-label="View project analytics"
+                    >
+                      Analytics
+                    </Link>
                     <button
                       onClick={() =>
                         setManagingMembersId(
