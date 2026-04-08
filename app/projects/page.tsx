@@ -1,11 +1,15 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import TimeTracker from "@/components/time-tracker";
+import ProjectManager from "@/components/project-manager";
 import SignOutButton from "@/components/sign-out-button";
 import DashboardNav from "@/components/dashboard-nav";
 
-export default async function DashboardPage() {
+export const metadata = {
+  title: "Projects",
+};
+
+export default async function ProjectsPage() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -32,7 +36,7 @@ export default async function DashboardPage() {
       </header>
 
       <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <TimeTracker userId={session.user.id} />
+        <ProjectManager />
       </main>
     </div>
   );
