@@ -70,14 +70,22 @@ export async function DELETE(
 
   const { id } = await params;
 
-  // Only the project owner (original creator) can delete the project
-  const project = await prisma.project.findUnique({ where: { id } });
+  const project = await prisma.project.findUnique({
+    where: { id },
+    include: {
+      members: {
+        where: { userId: session.user.id },
+        take: 1,
+      },
+    },
+  });
 
   if (!project) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  if (project.userId !== session.user.id) {
+  const membership = project.members[0];
+  if (!membership || membership.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
