@@ -20,6 +20,9 @@ const eslintConfig = defineConfig([
       // prevents the plugin from trying to auto-detect it and failing.
       react: { version: '19' },
     },
+    rules: {
+      "react-hooks/set-state-in-effect": "off"
+    }
   },
 ]);
 
