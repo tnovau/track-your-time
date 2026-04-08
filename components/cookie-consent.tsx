@@ -9,19 +9,31 @@ export default function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
-    if (!stored) {
-      setVisible(true);
+    try {
+      const stored = localStorage.getItem(COOKIE_CONSENT_KEY);
+      if (!stored) {
+        setVisible(true);
+      }
+    } catch {
+      // localStorage unavailable – skip the banner
     }
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, "accepted");
+    } catch {
+      // ignore
+    }
     setVisible(false);
   };
 
   const handleDecline = () => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, "declined");
+    try {
+      localStorage.setItem(COOKIE_CONSENT_KEY, "declined");
+    } catch {
+      // ignore
+    }
     setVisible(false);
   };
 
@@ -30,7 +42,6 @@ export default function CookieConsent() {
   return (
     <div
       role="dialog"
-      aria-live="polite"
       aria-label="Cookie consent"
       className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-950 shadow-lg"
     >
