@@ -54,6 +54,13 @@ export default function CookieConsent() {
             className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
           >
             Privacy Policy
+          </Link>{" "}
+          and{" "}
+          <Link
+            href="/terms-of-service"
+            className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+          >
+            Terms of Service
           </Link>
           .
         </p>
