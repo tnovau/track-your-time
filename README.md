@@ -52,3 +52,6 @@ See the [`docs/`](./docs/README.md) folder for detailed documentation:
 - [Database](./docs/database.md)
 - [API Reference](./docs/api.md)
 
+## Next steps
+
+- Create postman collection
