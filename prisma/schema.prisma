@@ -25,6 +25,7 @@ model User {
   accounts      Account[]
   projects      Project[]
   timeEntries   TimeEntry[]
+  projectMemberships ProjectMember[]
 }
 
 model Session {
@@ -71,18 +72,40 @@ model Verification {
 
 // ─── Time Tracking Models ─────────────────────────────────────────────────────
 
+enum ProjectRole {
+  ADMIN
+  TRACKER
+  READER
+}
+
 model Project {
-  id          String      @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String
   description String?
-  color       String      @default("#6366f1")
+  color       String          @default("#6366f1")
   userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   timeEntries TimeEntry[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  members     ProjectMember[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([userId])
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  projectId String
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      ProjectRole @default(READER)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([projectId, userId])
+  @@index([userId])
+  @@index([projectId])
 }
 
 model TimeEntry {

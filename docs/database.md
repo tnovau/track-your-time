@@ -37,6 +37,7 @@ The schema lives in `prisma/schema.prisma`.
 | Model | Description |
 |---|---|
 | `Project` | User-defined projects (name, colour) |
+| `ProjectMember` | Join table linking users to projects with a role (`ADMIN`, `TRACKER`, `READER`) |
 | `TimeEntry` | Individual time records with optional project link |
 
 ### TimeEntry fields

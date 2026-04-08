@@ -9,3 +9,4 @@ Welcome to the **Track Your Time** documentation. Use the links below to navigat
 | [Authentication](./authentication.md) | Better Auth configuration (Google & GitHub) |
 | [Database](./database.md) | Prisma schema and migrations |
 | [API Reference](./api.md) | REST API endpoints |
+| [Project Sharing](./project-sharing.md) | Role-based project sharing (Admin / Tracker / Reader) |
