@@ -27,6 +27,7 @@ Open `.env` and fill in the required values:
 | `DATABASE_URL` | PostgreSQL connection string |
 | `BETTER_AUTH_SECRET` | Random secret (run `openssl rand -base64 32`) |
 | `BETTER_AUTH_URL` | Base URL of your app (e.g. `http://localhost:3000`) |
+| `NEXT_PUBLIC_APP_URL` | Public app URL used by the auth client (usually same as `BETTER_AUTH_URL`) |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
 | `GITHUB_CLIENT_ID` | GitHub OAuth App client ID |
