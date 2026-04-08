@@ -95,6 +95,27 @@ function DeltaBadge({ current, previous }: { current: number; previous: number }
   );
 }
 
+function addHexOpacity(hex: string, alpha = 0.35): string {
+  const normalized = hex.replace("#", "");
+  const fullHex =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((c) => c + c)
+          .join("")
+      : normalized;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) {
+    throw new Error("Invalid hex color");
+  }
+
+  const alphaHex = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
+    .toString(16)
+    .padStart(2, "0");
+
+  return `#${fullHex}${alphaHex}`;
+}
+
 export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsViewProps) {
   const [data, setData] = useState<ProjectAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -308,7 +329,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
               />
               <Legend />
               <Bar dataKey="current" name={PERIOD_LABELS[period]} fill={project.color} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="previous" name={PREV_PERIOD_LABELS[period]} fill={project.color} fillOpacity={0.35} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="previous" name={PREV_PERIOD_LABELS[period]} fill={addHexOpacity(project.color, 0.35)} radius={[4, 4, 0, 0]} />
             </BarChart>
           ) : (
             <LineChart data={comparisonChartData} margin={{ top: 4, right: 16, bottom: 0, left: 0 }}>
@@ -337,7 +358,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
                 type="monotone"
                 dataKey="previous"
                 name={PREV_PERIOD_LABELS[period]}
-                stroke={project.color}
+                stroke={addHexOpacity(project.color, 0.35)}
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 strokeOpacity={0.5}
