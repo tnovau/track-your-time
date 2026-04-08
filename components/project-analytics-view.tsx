@@ -106,7 +106,7 @@ function addHexOpacity(hex: string, alpha = 0.35): string {
       : normalized;
 
   if (!/^[0-9a-fA-F]{6}$/.test(fullHex)) {
-    throw new Error("Invalid hex color");
+    return hex;
   }
 
   const alphaHex = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
