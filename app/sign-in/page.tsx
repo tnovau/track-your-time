@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import SignInButtons from "@/components/sign-in-buttons";
+import Link from "next/link";
 
 export default async function SignInPage() {
   const session = await auth.api.getSession({
@@ -25,7 +26,7 @@ export default async function SignInPage() {
         <SignInButtons />
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-          By signing in, you agree to our terms of service and privacy policy.
+          By signing in, you agree to our <Link href="/terms-of-service">Terms of Service</Link> and <Link href="/privacy-policy">Privacy Policy</Link>.
         </p>
       </div>
     </main>
