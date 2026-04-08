@@ -1,0 +1,37 @@
+$kind: collection
+name: Track Your Time API
+description: |-
+  REST API for the Track Your Time application. All endpoints are under `/api` and require an
+  authenticated session (cookie-based). Unauthenticated requests receive a `401 Unauthorized`
+  response.
+
+  **Base URL** is stored in the `baseUrl` collection variable (default: `http://localhost:3000`).
+
+  **Workflow tip:** Run the requests in folder order — create a project first, then invite members,
+  then log time entries. The test scripts automatically persist `projectId`, `memberId`, and
+  `timeEntryId` into collection variables so subsequent requests pick them up automatically.
+variables:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+    description: Base URL of the running Track Your Time server.
+  - key: projectId
+    value: ''
+    description: Persisted by Create Project / List Projects tests.
+  - key: memberId
+    value: ''
+    description: Persisted by Invite Member test.
+  - key: timeEntryId
+    value: ''
+    description: Persisted by Start Timer / Create Manual Entry tests.
+  - key: period
+    value: week
+    description: 'Analytics period: week | month | year'
+  - key: projectFilterId
+    value: ''
+    description: Optional project ID used when filtering time entries by project.
+  - key: dateFrom
+    value: ''
+    description: 'ISO 8601 timestamp — lower bound for time-entry date filter.'
+  - key: dateTo
+    value: ''
+    description: 'ISO 8601 timestamp — upper bound for time-entry date filter.'

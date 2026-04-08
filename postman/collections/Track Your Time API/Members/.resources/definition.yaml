@@ -1,0 +1,11 @@
+$kind: collection
+name: Members
+description: |-
+  Member management endpoints for a project. All routes are scoped to a specific project via
+  `{{projectId}}`.
+
+  - **List** – any project member (any role) can list members.
+  - **Invite / Change role / Remove** – requires **Admin** role.
+
+  The `memberId` collection variable is automatically populated by the Invite Member test script.
+order: 3000

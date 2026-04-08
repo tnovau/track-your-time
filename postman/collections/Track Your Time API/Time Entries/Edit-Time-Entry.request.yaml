@@ -1,0 +1,53 @@
+$kind: http-request
+name: Edit Time Entry
+method: PATCH
+url: '{{baseUrl}}/api/time-entries/{{timeEntryId}}'
+order: 4000
+description: |-
+  Partially updates a time entry. All fields are optional; omitted fields retain their current
+  values. Duration is automatically recalculated whenever `startTime` or `endTime` changes.
+
+  **Response `200`** – the updated entry object.
+  **Response `404`** – if the entry is not found or does not belong to the authenticated user.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "Updated description",
+      "projectId": "{{projectId}}",
+      "startTime": "2026-01-01T09:00:00.000Z",
+      "endTime": "2026-01-01T10:30:00.000Z"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Updated entry has required fields', function () {
+          const entry = pm.response.json();
+          pm.expect(entry).to.have.property('id');
+          pm.expect(entry).to.have.property('startTime');
+          pm.expect(entry).to.have.property('endTime');
+          pm.expect(entry).to.have.property('duration');
+      });
+
+      pm.test('Description was updated', function () {
+          pm.expect(pm.response.json().description).to.eql('Updated description');
+      });
+
+      pm.test('Duration was recalculated after edit', function () {
+          const entry = pm.response.json();
+          if (entry.endTime !== null) {
+              pm.expect(entry.duration).to.be.a('number').and.above(0);
+          }
+      });

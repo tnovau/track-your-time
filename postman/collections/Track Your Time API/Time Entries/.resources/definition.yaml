@@ -1,0 +1,12 @@
+$kind: collection
+name: Time Entries
+description: |-
+  Endpoints for creating, listing, editing, and stopping time entries.
+
+  Two creation modes are supported:
+  - **Timer mode** – omit `startTime`/`endTime` to start a live timer (stops any running entry).
+  - **Manual mode** – provide both `startTime` and `endTime` to create a completed entry immediately.
+
+  The `timeEntryId` collection variable is automatically populated by the Start Timer and
+  Create Manual Entry test scripts.
+order: 4000

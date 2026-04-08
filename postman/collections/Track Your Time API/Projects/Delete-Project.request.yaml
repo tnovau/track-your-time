@@ -1,0 +1,27 @@
+$kind: http-request
+name: Delete Project
+method: DELETE
+url: '{{baseUrl}}/api/projects/{{projectId}}'
+order: 4000
+description: |-
+  Permanently deletes a project. Requires **Admin** role.
+  Time entries that referenced this project will have their `projectId` set to `null` (not deleted).
+
+  **Response `204`** – no content.
+  **Response `403`** – if the caller does not have Admin role.
+  **Response `404`** – if the project is not found or the caller is not a member.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 204', function () {
+          pm.response.to.have.status(204);
+      });
+
+      pm.test('Response body is empty', function () {
+          pm.expect(pm.response.text()).to.be.empty;
+      });
+
+      // Clear the persisted projectId after deletion.
+      pm.collectionVariables.set('projectId', '');
+      console.log('projectId cleared after deletion');

@@ -1,0 +1,31 @@
+$kind: http-request
+name: Remove Member
+method: DELETE
+url: '{{baseUrl}}/api/projects/{{projectId}}/members/{{memberId}}'
+order: 4000
+description: |-
+  Removes a member from the project.
+
+  - **Admins** can remove any member.
+  - **Non-admin members** can only remove themselves (leave the project).
+  - The last Admin cannot be removed; transfer the Admin role first.
+
+  **Response `204`** – no content.
+  **Response `400`** – if the target member is the last Admin.
+  **Response `403`** – if the caller is not an Admin and is not removing themselves.
+  **Response `404`** – if the member is not found.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 204', function () {
+          pm.response.to.have.status(204);
+      });
+
+      pm.test('Response body is empty', function () {
+          pm.expect(pm.response.text()).to.be.empty;
+      });
+
+      // Clear the persisted memberId after removal.
+      pm.collectionVariables.set('memberId', '');
+      console.log('memberId cleared after removal');

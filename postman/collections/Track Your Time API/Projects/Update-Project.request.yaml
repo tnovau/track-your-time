@@ -1,0 +1,53 @@
+$kind: http-request
+name: Update Project
+method: PATCH
+url: '{{baseUrl}}/api/projects/{{projectId}}'
+order: 3000
+description: |-
+  Partially updates a project. Requires **Admin** role. All fields are optional; omitted fields
+  retain their current values.
+
+  - `name` must be a non-empty string if provided.
+  - `color` must be a valid 6-digit hex color (e.g. `#a1b2c3`) if provided.
+  - `currency` is a free-form string. Pass `null` to clear it.
+  - `hourlyRate` is a positive number. Pass `null` to clear it.
+
+  **Response `200`** – the updated project object.
+  **Response `400`** – if `name` is empty or `color` format is invalid.
+  **Response `403`** – if the caller does not have Admin role.
+  **Response `404`** – if the project is not found or the caller is not a member.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Renamed Project",
+      "description": "Updated description",
+      "color": "#f59e0b",
+      "currency": "$",
+      "hourlyRate": 100
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Updated project has required fields', function () {
+          const project = pm.response.json();
+          pm.expect(project).to.have.property('id');
+          pm.expect(project).to.have.property('name');
+      });
+
+      pm.test('Project name matches request', function () {
+          const project = pm.response.json();
+          pm.expect(project.name).to.eql('Renamed Project');
+      });

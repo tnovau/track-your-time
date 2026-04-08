@@ -1,0 +1,9 @@
+$kind: collection
+name: Analytics
+description: |-
+  Overall analytics endpoint that aggregates time and earnings across **all** projects the
+  authenticated user is a member of, within a single period window.
+
+  Useful for cross-project charts and pie/donut breakdowns. The `period` collection variable
+  controls the time window (`week` | `month` | `year`; default `month`).
+order: 5000

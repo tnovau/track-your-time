@@ -1,0 +1,38 @@
+$kind: http-request
+name: List Projects
+method: GET
+url: '{{baseUrl}}/api/projects'
+order: 1000
+description: |-
+  Returns all projects the authenticated user is a member of, including their `role` in each project.
+
+  **Response `200`** – array of project objects, each with an `id`, `name`, `color`, `currency`,
+  `hourlyRate`, `userId`, `createdAt`, and `role` field.
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is a JSON array', function () {
+          const body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Each project has required fields', function () {
+          const body = pm.response.json();
+          body.forEach(function (project) {
+              pm.expect(project).to.have.property('id');
+              pm.expect(project).to.have.property('name');
+              pm.expect(project).to.have.property('role');
+          });
+      });
+
+      // Persist the first project ID for downstream requests if not already set.
+      const projects = pm.response.json();
+      if (projects.length > 0 && !pm.collectionVariables.get('projectId')) {
+          pm.collectionVariables.set('projectId', projects[0].id);
+          console.log('projectId set to', projects[0].id);
+      }

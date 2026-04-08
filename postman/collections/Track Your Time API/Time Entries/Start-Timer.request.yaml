@@ -1,0 +1,54 @@
+$kind: http-request
+name: Start Timer
+method: POST
+url: '{{baseUrl}}/api/time-entries'
+order: 2000
+description: |-
+  **Timer mode** – starts a new live timer. Stops any currently running entry automatically.
+  Omit `startTime` and `endTime` to use this mode.
+
+  Both `description` and `projectId` are optional.
+
+  **Response `201`** – the created entry object with `endTime: null` and `duration: null`.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "description": "Working on feature X",
+      "projectId": "{{projectId}}"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Timer entry has required fields', function () {
+          const entry = pm.response.json();
+          pm.expect(entry).to.have.property('id');
+          pm.expect(entry).to.have.property('startTime');
+          pm.expect(entry).to.have.property('endTime');
+          pm.expect(entry).to.have.property('duration');
+      });
+
+      pm.test('Timer entry is running (endTime and duration are null)', function () {
+          const entry = pm.response.json();
+          pm.expect(entry.endTime).to.be.null;
+          pm.expect(entry.duration).to.be.null;
+      });
+
+      // Persist the new entry ID for downstream requests.
+      const entry = pm.response.json();
+      if (entry && entry.id) {
+          pm.collectionVariables.set('timeEntryId', entry.id);
+          console.log('timeEntryId set to', entry.id);
+      }

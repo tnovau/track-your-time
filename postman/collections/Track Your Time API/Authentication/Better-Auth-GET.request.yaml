@@ -1,0 +1,17 @@
+$kind: http-request
+name: Better Auth GET
+method: GET
+url: '{{baseUrl}}/api/auth/*'
+order: 1000
+description: |-
+  Wildcard reference for Better Auth internal GET endpoints (e.g. session, sign-in page).
+  Exact routes are managed by the Better Auth library catch-all handler.
+  Replace `*` with the specific Better Auth path you need (e.g. `session`, `sign-in/email`).
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      // Better Auth routes are library-managed; only assert the request was handled.
+      pm.test('Response received', function () {
+          pm.response.to.have.status.oneOf([200, 302, 400, 401]);
+      });

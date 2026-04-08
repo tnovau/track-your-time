@@ -1,0 +1,57 @@
+$kind: http-request
+name: Invite Member
+method: POST
+url: '{{baseUrl}}/api/projects/{{projectId}}/members'
+order: 2000
+description: |-
+  Invites a registered user to the project by email address. Requires **Admin** role.
+
+  - `email` – required. Must match an existing user account.
+  - `role` – optional. One of `ADMIN`, `TRACKER`, `READER`. Defaults to `READER`.
+
+  **Response `201`** – the created `ProjectMember` object (including the user's name and email).
+  **Response `400`** – if `email` is missing or the user is already a member.
+  **Response `403`** – if the caller does not have Admin role.
+  **Response `404`** – if no user account exists with that email, or the project is not found.
+  **Response `409`** – if the user is already a member of this project.
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "jane@example.com",
+      "role": "TRACKER"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |-
+      pm.test('Status is 201', function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test('Response is a JSON object', function () {
+          pm.expect(pm.response.json()).to.be.an('object');
+      });
+
+      pm.test('Created member has required fields', function () {
+          const member = pm.response.json();
+          pm.expect(member).to.have.property('id');
+          pm.expect(member).to.have.property('role');
+          pm.expect(member).to.have.property('user');
+          pm.expect(member.user).to.have.property('email');
+      });
+
+      pm.test('Member role is a valid value', function () {
+          const validRoles = ['ADMIN', 'TRACKER', 'READER'];
+          pm.expect(validRoles).to.include(pm.response.json().role);
+      });
+
+      // Persist the new member ID for downstream requests.
+      const member = pm.response.json();
+      if (member && member.id) {
+          pm.collectionVariables.set('memberId', member.id);
+          console.log('memberId set to', member.id);
+      }

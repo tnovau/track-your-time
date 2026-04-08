@@ -1,0 +1,14 @@
+$kind: collection
+name: Projects
+description: |-
+  CRUD operations for projects, plus per-project analytics.
+
+  The authenticated user must be a **member** of a project to see or interact with it.
+  Role-based access control applies:
+  - **Admin** – full control (edit, invite members, delete).
+  - **Tracker** – can view and log time entries.
+  - **Reader** – can view the project and all member entries.
+
+  The `projectId` collection variable is automatically populated by the Create Project and
+  List Projects test scripts.
+order: 2000
