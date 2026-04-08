@@ -69,7 +69,6 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   const [manualError, setManualError] = useState<string | null>(null);
 
   // Filter state
-  const [showFilter, setShowFilter] = useState(false);
   const [filterProjectId, setFilterProjectId] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
@@ -245,19 +244,6 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
     setFilterDateTo("");
   };
 
-  const totalToday = entries.reduce((acc, e) => {
-    const start = new Date(e.startTime);
-    const today = new Date();
-    if (
-      start.getFullYear() === today.getFullYear() &&
-      start.getMonth() === today.getMonth() &&
-      start.getDate() === today.getDate()
-    ) {
-      return acc + (e.duration ?? 0);
-    }
-    return acc;
-  }, 0);
-
   const totalFiltered = entries.reduce((acc, e) => acc + (e.duration ?? 0), 0);
 
   return (
@@ -308,9 +294,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold">
-            {isFilterActive ? "Filtered Entries" : "Today"}
-          </h2>
+          <h2 className="text-lg font-semibold">Time Entries</h2>
           {isFilterActive && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400">
               {entries.length} result{entries.length !== 1 ? "s" : ""}
@@ -318,77 +302,67 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           )}
         </div>
         <div className="flex items-center gap-3">
-          <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
-            Total: {formatDuration(isFilterActive ? totalFiltered : totalToday)}
-          </span>
+          {isFilterActive && (
+            <span className="font-mono text-sm text-gray-500 dark:text-gray-400">
+              Total: {formatDuration(totalFiltered)}
+            </span>
+          )}
           <button
             onClick={() => { setShowManualForm((v) => !v); setManualError(null); }}
             className="rounded-lg px-3 py-1.5 text-sm font-medium border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             {showManualForm ? "Cancel" : "+ Add entry"}
           </button>
-          <button
-            onClick={() => setShowFilter((v) => !v)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium border transition-colors ${
-              isFilterActive
-                ? "border-indigo-400 dark:border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50"
-                : "border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
-            }`}
-          >
-            {showFilter ? "Hide Filter" : isFilterActive ? "Filter ●" : "Filter"}
-          </button>
         </div>
       </div>
 
       {/* Filter bar */}
-      {showFilter && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400">Project</label>
-              <select
-                value={filterProjectId}
-                onChange={(e) => setFilterProjectId(e.target.value)}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                <option value="">All Projects</option>
-                <option value="none">No Project</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400">From</label>
-              <input
-                type="date"
-                value={filterDateFrom}
-                onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500 dark:text-gray-400">To</label>
-              <input
-                type="date"
-                value={filterDateTo}
-                onChange={(e) => setFilterDateTo(e.target.value)}
-                className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              />
-            </div>
-            {isFilterActive && (
-              <button
-                onClick={handleClearFilter}
-                className="rounded-lg px-3 py-2 text-sm font-medium text-red-500 hover:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
-              >
-                Clear
-              </button>
-            )}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500 dark:text-gray-400">Project</label>
+            <select
+              value={filterProjectId}
+              onChange={(e) => setFilterProjectId(e.target.value)}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All Projects</option>
+              <option value="none">No Project</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500 dark:text-gray-400">From</label>
+            <input
+              type="date"
+              value={filterDateFrom}
+              onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs text-gray-500 dark:text-gray-400">To</label>
+            <input
+              type="date"
+              value={filterDateTo}
+              onChange={(e) => setFilterDateTo(e.target.value)}
+              className="rounded-lg border border-gray-200 dark:border-gray-700 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+          {isFilterActive && (
+            <button
+              onClick={handleClearFilter}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-red-500 hover:text-red-400 border border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
+            >
+              Clear
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Manual entry form */}
       {showManualForm && (
