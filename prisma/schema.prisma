@@ -83,6 +83,8 @@ model Project {
   name        String
   description String?
   color       String          @default("#6366f1")
+  currency    String?
+  hourlyRate  Float?
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   timeEntries TimeEntry[]

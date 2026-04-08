@@ -30,6 +30,8 @@ Returns all projects the authenticated user is a **member of**, including their 
     "name": "My Project",
     "description": null,
     "color": "#6366f1",
+    "currency": "€",
+    "hourlyRate": 75.00,
     "userId": "clyyy",
     "createdAt": "2026-01-01T00:00:00.000Z",
     "role": "ADMIN"
@@ -49,9 +51,13 @@ Content-Type: application/json
 {
   "name": "My Project",
   "description": "Optional description",
-  "color": "#6366f1"
+  "color": "#6366f1",
+  "currency": "€",
+  "hourlyRate": 75.00
 }
 ```
+
+`description`, `color`, `currency`, and `hourlyRate` are all optional. `currency` is a free-form string (e.g. `€`, `$`, `GBP`); `hourlyRate` is a positive number representing the billing rate per hour.
 
 **Response `201`** – the created project object. The creator is automatically assigned the **Admin** role.
 
@@ -69,12 +75,16 @@ Requires **Admin** role. Partially updates a project. All fields are optional; o
 {
   "name": "Renamed Project",
   "description": "Updated description",
-  "color": "#f59e0b"
+  "color": "#f59e0b",
+  "currency": "$",
+  "hourlyRate": 100.00
 }
 ```
 
 - `name` must be a non-empty string if provided.
 - `color` must be a valid 6-digit hex color (e.g. `#a1b2c3`) if provided.
+- `currency` is a free-form string (e.g. `€`, `$`, `GBP`). Pass `null` to clear it.
+- `hourlyRate` is a positive number. Pass `null` to clear it.
 
 **Response `200`** – the updated project object.
 
