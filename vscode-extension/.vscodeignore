@@ -1,0 +1,6 @@
+.vscode/**
+src/**
+.tsbuildinfo
+.eslintrc.json
+node_modules/**
+*.log
