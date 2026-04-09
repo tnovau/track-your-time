@@ -4,10 +4,16 @@ import { headers } from "next/headers";
 import SignInButtons from "@/components/sign-in-buttons";
 import Link from "next/link";
 
-export default async function SignInPage() {
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackURL?: string }>;
+}) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+  const params = await searchParams;
+  const callbackURL = params.callbackURL;
 
   if (session) {
     redirect("/dashboard");
@@ -23,7 +29,7 @@ export default async function SignInPage() {
           </p>
         </div>
 
-        <SignInButtons />
+        <SignInButtons callbackURL={callbackURL} />
 
         <p className="text-center text-sm text-gray-500 dark:text-gray-400">
           By signing in, you agree to our <Link className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors" href="/terms-of-service">Terms of Service</Link> and <Link className="underline hover:text-gray-900 dark:hover:text-gray-100 transition-colors" href="/privacy-policy">Privacy Policy</Link>.
