@@ -1,8 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import SignOutButton from "@/components/sign-out-button";
-import DashboardNav from "@/components/dashboard-nav";
+import AppSidebar from "@/components/app-sidebar";
 import OverallAnalyticsView from "@/components/overall-analytics-view";
 
 export const metadata = {
@@ -19,24 +18,18 @@ export default async function AnalyticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-gray-200 dark:border-gray-800">
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <h1 className="text-xl font-semibold">Track Your Time</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {session.user.name ?? session.user.email}
-            </span>
-            <SignOutButton />
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950">
+      <AppSidebar user={session.user} />
+      <main className="lg:pl-64 pt-14 lg:pt-0">
+        <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-5xl">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold tracking-tight">Analytics</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Insights into how you spend your time
+            </p>
           </div>
+          <OverallAnalyticsView />
         </div>
-        <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-2">
-          <DashboardNav />
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-8">
-        <OverallAnalyticsView />
       </main>
     </div>
   );
