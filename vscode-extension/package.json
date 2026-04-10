@@ -1,0 +1,84 @@
+{
+  "name": "track-your-time-vscode",
+  "displayName": "Track Your Time",
+  "description": "Track time and analytics from Track Your Time inside VS Code",
+  "version": "0.0.1",
+  "publisher": "internal",
+  "private": true,
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "trackYourTime.signIn", "title": "Track Your Time: Sign In" },
+      { "command": "trackYourTime.signOut", "title": "Track Your Time: Sign Out" },
+      { "command": "trackYourTime.startTimer", "title": "Track Your Time: Start Timer" },
+      { "command": "trackYourTime.stopTimer", "title": "Track Your Time: Stop Timer" },
+      { "command": "trackYourTime.updateRunningDescription", "title": "Track Your Time: Update Running Description" },
+      { "command": "trackYourTime.createManualEntry", "title": "Track Your Time: Create Manual Entry" },
+      { "command": "trackYourTime.editEntry", "title": "Track Your Time: Edit Existing Entry" },
+      { "command": "trackYourTime.listRecentEntries", "title": "Track Your Time: List Recent Entries" },
+      { "command": "trackYourTime.showAnalyticsSummary", "title": "Track Your Time: Show Analytics Summary" },
+      { "command": "trackYourTime.showAnalyticsCharts", "title": "Track Your Time: Show Analytics Charts" }
+    ],
+    "configuration": {
+      "title": "Track Your Time",
+      "properties": {
+        "trackYourTime.baseUrl": {
+          "type": "string",
+          "default": "http://localhost:3000",
+          "description": "Base URL for the Track Your Time application"
+        },
+        "trackYourTime.callbackHost": {
+          "type": "string",
+          "default": "127.0.0.1",
+          "description": "Loopback host used by the extension callback listener"
+        },
+        "trackYourTime.callbackPort": {
+          "type": "number",
+          "default": 43899,
+          "description": "Loopback port used by the extension callback listener"
+        },
+        "trackYourTime.defaultProvider": {
+          "type": "string",
+          "default": "github",
+          "enum": ["github", "google"],
+          "description": "Preferred auth provider shown during sign-in"
+        },
+        "trackYourTime.pollIntervalSeconds": {
+          "type": "number",
+          "default": 15,
+          "minimum": 5,
+          "maximum": 120,
+          "description": "How often timer state is refreshed from the API"
+        },
+        "trackYourTime.defaultAnalyticsPeriod": {
+          "type": "string",
+          "default": "month",
+          "enum": ["week", "month", "year"],
+          "description": "Default period when fetching analytics"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "watch": "tsc -w -p ./",
+    "lint": "eslint src --ext .ts",
+    "prepackage": "npm run build",
+    "package:vsix": "vsce package --allow-missing-repository --skip-license --out track-your-time-vscode.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "@types/vscode": "^1.95.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.1",
+    "@typescript-eslint/parser": "^8.46.1",
+    "@vscode/vsce": "^3.6.1",
+    "eslint": "^9.39.1",
+    "typescript": "^5.9.3"
+  }
+}

@@ -2,9 +2,13 @@
 
 import { signIn } from "@/lib/auth-client";
 
-export default function SignInButtons() {
+type SignInButtonsProps = {
+  callbackURL?: string;
+};
+
+export default function SignInButtons({ callbackURL }: SignInButtonsProps) {
   const handleSignIn = async (provider: "google" | "github") => {
-    await signIn.social({ provider, callbackURL: "/dashboard" });
+    await signIn.social({ provider, callbackURL: callbackURL ?? "/dashboard" });
   };
 
   return (

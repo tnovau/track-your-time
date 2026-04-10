@@ -148,3 +148,5 @@ vite.config.ts.timestamp-*
 
 # TypeScript build info files
 tsconfig.tsbuildinfo
+
+vscode-extension/*.vsix
