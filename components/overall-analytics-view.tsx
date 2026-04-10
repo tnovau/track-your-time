@@ -138,7 +138,7 @@ export default function OverallAnalyticsView() {
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
+      <div className="rounded-2xl border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
         {error}
       </div>
     );
@@ -146,7 +146,7 @@ export default function OverallAnalyticsView() {
 
   if (!data || data.projects.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center text-gray-400">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-8 text-center text-gray-400">
         No time entries found for this period.
       </div>
     );
@@ -247,21 +247,21 @@ export default function OverallAnalyticsView() {
 
       {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             Total Hours
           </p>
           <p className="text-2xl font-bold mt-2">{formatHours(totalHours)}</p>
         </div>
         {hasEarnings && (
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               Total Earnings
             </p>
             <p className="text-2xl font-bold mt-2">{totalEarnings.toFixed(2)}</p>
           </div>
         )}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             Projects
           </p>
@@ -270,7 +270,7 @@ export default function OverallAnalyticsView() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
         {chartType === "pie" ? (
           <div className="flex flex-col items-center gap-4">
             <ResponsiveContainer width="100%" height={300}>
@@ -376,7 +376,7 @@ export default function OverallAnalyticsView() {
             <Link
               key={p.id}
               href={`/projects/${p.id}`}
-              className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-2.5 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm transition-all"
             >
               <span
                 className="h-3 w-3 rounded-full shrink-0"

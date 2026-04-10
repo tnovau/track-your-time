@@ -15,7 +15,7 @@ export default function SignInButtons({ callbackURL }: SignInButtonsProps) {
     <div className="space-y-4">
       <button
         onClick={() => handleSignIn("google")}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 dark:border-gray-700 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-900 hover:shadow-md transition-all"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
           <path
@@ -40,7 +40,7 @@ export default function SignInButtons({ callbackURL }: SignInButtonsProps) {
 
       <button
         onClick={() => handleSignIn("github")}
-        className="flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+        className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-300 dark:border-gray-700 px-4 py-3 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-900 hover:shadow-md transition-all"
       >
         <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
           <path

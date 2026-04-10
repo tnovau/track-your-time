@@ -266,7 +266,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
   return (
     <div className="space-y-6">
       {/* Timer Bar */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <input
             type="text"
@@ -297,10 +297,10 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           <button
             onClick={runningEntry ? handleStop : handleStart}
             disabled={loading}
-            className={`rounded-lg px-5 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-60 ${
+            className={`rounded-xl px-5 py-2 text-sm font-semibold text-white transition-all disabled:opacity-60 ${
               runningEntry
                 ? "bg-red-500 hover:bg-red-400"
-                : "bg-indigo-600 hover:bg-indigo-500"
+                : "bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40"
             }`}
           >
             {runningEntry ? "Stop" : "Start"}
@@ -339,7 +339,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
       </div>
 
       {/* Filter bar */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-gray-500 dark:text-gray-400">Project</label>
@@ -388,8 +388,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
 
       {/* Manual entry form */}
       {showManualForm && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
-          <h3 className="text-sm font-semibold">Add Manual Entry</h3>
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
           <input
             type="text"
             placeholder="Description (optional)"
@@ -436,7 +435,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
             <button
               onClick={handleManualCreate}
               disabled={loading}
-              className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+              className="rounded-xl px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 disabled:opacity-60"
             >
               Save Entry
             </button>
@@ -451,7 +450,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+                className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-3"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="h-3 w-1/2 rounded bg-gray-200 dark:bg-gray-700" />
@@ -472,7 +471,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           </p>
         )}
         {!fetching && runningEntry && (
-          <div className="flex items-center justify-between rounded-lg border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-indigo-200 dark:border-indigo-900 bg-indigo-50 dark:bg-indigo-950/30 px-4 py-3">
             <div className="flex items-center gap-3 min-w-0">
               <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse shrink-0" />
               <span className="text-sm font-medium truncate">
@@ -496,7 +495,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           editingId === entry.id ? (
             <div
               key={entry.id}
-              className="rounded-lg border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3"
+              className="rounded-xl border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3"
             >
               <input
                 type="text"
@@ -568,7 +567,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
                 <button
                   onClick={() => handleEditSave(entry.id)}
                   disabled={loading}
-                  className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+                  className="rounded-xl px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 disabled:opacity-60"
                 >
                   Save
                 </button>
@@ -577,7 +576,7 @@ export default function TimeTracker({ userId }: TimeTrackerProps) {
           ) : (
             <div
               key={entry.id}
-              className="flex items-center justify-between rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+              className="flex items-center justify-between rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-3 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm transition-all"
             >
               <div className="flex items-center gap-3 min-w-0">
                 <span className="text-sm font-medium truncate">

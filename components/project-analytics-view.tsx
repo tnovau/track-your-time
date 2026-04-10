@@ -156,7 +156,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
 
   if (error) {
     return (
-      <div className="rounded-xl border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
+      <div className="rounded-2xl border border-red-200 dark:border-red-800 p-4 text-sm text-red-600 dark:text-red-400">
         {error}
       </div>
     );
@@ -281,7 +281,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {PERIOD_LABELS[period]}
           </p>
@@ -297,7 +297,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-700 transition-all">
           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
             {PREV_PERIOD_LABELS[period]}
           </p>
@@ -309,7 +309,7 @@ export default function ProjectAnalyticsView({ projectId }: ProjectAnalyticsView
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4">
+      <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4">
         <p className="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">
           {metricLabel} — {PERIOD_LABELS[period]} vs {PREV_PERIOD_LABELS[period]}
         </p>

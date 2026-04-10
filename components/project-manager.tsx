@@ -160,7 +160,7 @@ function ProjectForm({
         <button
           onClick={onSubmit}
           disabled={loading}
-          className="rounded-lg px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors disabled:opacity-60"
+          className="rounded-xl px-4 py-1.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-500 transition-all shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/40 disabled:opacity-60"
         >
           {submitLabel}
         </button>
@@ -261,7 +261,7 @@ function MembersManager({ project, onClose }: MembersManagerProps) {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span
@@ -516,7 +516,7 @@ export default function ProjectManager() {
       </div>
 
       {showCreateForm && (
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
+        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 p-4 space-y-3">
           <h3 className="text-sm font-semibold">New Project</h3>
           <ProjectForm
             form={createForm}
@@ -536,7 +536,7 @@ export default function ProjectManager() {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-3"
               >
                 <div className="h-3 w-3 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
                 <div className="flex-1 space-y-1.5">
@@ -557,7 +557,7 @@ export default function ProjectManager() {
         {!fetching && projects.map((project) => (
           <div key={project.id}>
             {editingId === project.id ? (
-              <div className="rounded-lg border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3">
+              <div className="rounded-xl border border-indigo-300 dark:border-indigo-700 px-4 py-3 space-y-3">
                 <ProjectForm
                   form={editForm}
                   onChange={setEditForm}
@@ -569,7 +569,7 @@ export default function ProjectManager() {
                 />
               </div>
             ) : (
-              <div className="rounded-lg border border-gray-200 dark:border-gray-800 px-4 py-3">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-3 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm transition-all">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 min-w-0">
                     <span
