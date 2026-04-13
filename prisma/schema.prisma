@@ -25,6 +25,7 @@ model User {
   accounts      Account[]
   projects      Project[]
   timeEntries   TimeEntry[]
+  expenses      Expense[]
   projectMemberships ProjectMember[]
 }
 
@@ -88,6 +89,7 @@ model Project {
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   timeEntries TimeEntry[]
+  expenses    Expense[]
   members     ProjectMember[]
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
@@ -122,6 +124,22 @@ model TimeEntry {
   project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  date        DateTime
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
   @@index([projectId])
