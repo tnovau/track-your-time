@@ -391,6 +391,7 @@ Returns expenses for the authenticated user.
     "id": "clxxx",
     "description": "Software subscription",
     "amount": 29.99,
+    "tax": 4.50,
     "date": "2026-04-01T00:00:00.000Z",
     "fileUrl": "https://ufs.sh/f/abc123...",
     "fileKey": "abc123...",
@@ -401,7 +402,7 @@ Returns expenses for the authenticated user.
 ]
 ```
 
-`fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached.
+`tax` is `null` when no tax was specified. `fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached.
 
 ### Create expense
 
@@ -415,6 +416,7 @@ Content-Type: application/json
 {
   "description": "Software subscription",
   "amount": 29.99,
+  "tax": 4.50,
   "date": "2026-04-01T00:00:00.000Z",
   "projectId": "clyyy",
   "fileUrl": "https://ufs.sh/f/abc123...",
@@ -423,11 +425,11 @@ Content-Type: application/json
 }
 ```
 
-`projectId`, `fileUrl`, `fileKey`, and `fileName` are optional. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
+`projectId`, `tax`, `fileUrl`, `fileKey`, and `fileName` are optional. `tax` is a non-negative number representing the tax amount in the project's currency. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
 
 **Response `201`** – the created expense object.
 
-**Response `400`** if description is empty, amount is not a positive number, or date is invalid.
+**Response `400`** if description is empty, amount is not a positive number, tax is negative, or date is invalid.
 
 **Response `403`** if assigning to a project where the caller has only the Reader role.
 
@@ -447,6 +449,7 @@ Partially updates an expense. All fields are optional; omitted fields retain the
 {
   "description": "Updated description",
   "amount": 35.00,
+  "tax": 5.25,
   "date": "2026-04-02T00:00:00.000Z",
   "projectId": "clyyy",
   "fileUrl": "https://ufs.sh/f/def456...",
@@ -455,7 +458,7 @@ Partially updates an expense. All fields are optional; omitted fields retain the
 }
 ```
 
-Pass `fileUrl: null`, `fileKey: null`, `fileName: null` to remove an attached file.
+Pass `tax: null` to remove the tax value. Pass `fileUrl: null`, `fileKey: null`, `fileName: null` to remove an attached file.
 
 **Response `200`** – the updated expense object.
 

@@ -6,6 +6,7 @@ interface Expense {
   id: string;
   description: string;
   amount: number;
+  tax: number | null;
   date: string;
   userId: string;
   fileUrl: string | null;
@@ -25,6 +26,7 @@ interface Project {
 interface ExpenseFormState {
   description: string;
   amount: string;
+  tax: string;
   date: string;
   projectId: string;
   file: File | null;
@@ -37,6 +39,7 @@ function emptyForm(): ExpenseFormState {
   return {
     description: "",
     amount: "",
+    tax: "",
     date: new Date().toISOString().slice(0, 10),
     projectId: "",
     file: null,
@@ -161,6 +164,7 @@ export default function ExpenseTracker() {
           amount: Number(form.amount),
           date: new Date(form.date).toISOString(),
           projectId: form.projectId || null,
+          tax: form.tax ? Number(form.tax) : null,
           ...fileData,
         }),
       });
@@ -184,6 +188,7 @@ export default function ExpenseTracker() {
     setEditForm({
       description: expense.description,
       amount: String(expense.amount),
+      tax: expense.tax != null ? String(expense.tax) : "",
       date: new Date(expense.date).toISOString().slice(0, 10),
       projectId: expense.project?.id ?? "",
       file: null,
@@ -217,6 +222,7 @@ export default function ExpenseTracker() {
           amount: Number(editForm.amount),
           date: new Date(editForm.date).toISOString(),
           projectId: editForm.projectId || null,
+          tax: editForm.tax ? Number(editForm.tax) : null,
           ...fileData,
         }),
       });
@@ -247,6 +253,7 @@ export default function ExpenseTracker() {
   }
 
   const totalAmount = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalTax = expenses.reduce((sum, e) => sum + (e.tax ?? 0), 0);
   const selectedProject = filterProjectId && filterProjectId !== "none"
     ? projects.find((p) => p.id === filterProjectId)
     : null;
@@ -316,6 +323,14 @@ export default function ExpenseTracker() {
             <span className="font-semibold text-gray-900 dark:text-gray-100">
               {formatCurrency(totalAmount, selectedProject?.currency ?? null)}
             </span>
+            {totalTax > 0 && (
+              <>
+                {" · Tax "}
+                <span className="font-semibold text-gray-900 dark:text-gray-100">
+                  {formatCurrency(totalTax, selectedProject?.currency ?? null)}
+                </span>
+              </>
+            )}
           </p>
         </div>
         <button
@@ -357,6 +372,20 @@ export default function ExpenseTracker() {
                 min="0.01"
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
+                placeholder="0.00"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Tax (optional)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.tax}
+                onChange={(e) => setForm({ ...form, tax: e.target.value })}
                 placeholder="0.00"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
               />
@@ -482,6 +511,20 @@ export default function ExpenseTracker() {
                         setEditForm({ ...editForm, amount: e.target.value })
                       }
                       className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+                      placeholder="Amount"
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editForm.tax}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, tax: e.target.value })
+                      }
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+                      placeholder="Tax"
                     />
                   </div>
                   <div>
@@ -651,6 +694,11 @@ export default function ExpenseTracker() {
                       expense.project?.currency ?? null
                     )}
                   </p>
+                  {expense.tax != null && expense.tax > 0 && (
+                    <p className="text-xs text-gray-400 tabular-nums">
+                      tax {formatCurrency(expense.tax, expense.project?.currency ?? null)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Actions */}

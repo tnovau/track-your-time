@@ -79,6 +79,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Valid date is required" }, { status: 400 });
   }
 
+  if (body.tax !== undefined && body.tax !== null) {
+    if (isNaN(Number(body.tax)) || Number(body.tax) < 0) {
+      return NextResponse.json({ error: "Tax must be a non-negative number" }, { status: 400 });
+    }
+  }
+
   // If assigning to a project, verify membership with ADMIN or TRACKER role
   if (body.projectId) {
     const membership = await prisma.projectMember.findFirst({
@@ -96,6 +102,7 @@ export async function POST(req: NextRequest) {
     data: {
       description: body.description.trim(),
       amount: Number(body.amount),
+      tax: body.tax != null ? Number(body.tax) : null,
       date: new Date(body.date),
       userId: session.user.id,
       projectId: body.projectId ?? null,

@@ -43,6 +43,12 @@ export async function PATCH(
     }
   }
 
+  if (body.tax !== undefined && body.tax !== null) {
+    if (isNaN(Number(body.tax)) || Number(body.tax) < 0) {
+      return NextResponse.json({ error: "Tax must be a non-negative number" }, { status: 400 });
+    }
+  }
+
   // If changing project, verify membership
   if (body.projectId !== undefined && body.projectId !== null) {
     const membership = await prisma.projectMember.findFirst({
@@ -77,6 +83,8 @@ export async function PATCH(
         body.amount !== undefined ? Number(body.amount) : expense.amount,
       date:
         body.date !== undefined ? new Date(body.date) : expense.date,
+      tax:
+        body.tax !== undefined ? (body.tax != null ? Number(body.tax) : null) : expense.tax,
       projectId:
         body.projectId !== undefined ? body.projectId : expense.projectId,
       ...fileData,

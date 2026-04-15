@@ -133,6 +133,7 @@ model Expense {
   id          String   @id @default(cuid())
   description String
   amount      Float
+  tax         Float?
   date        DateTime
   fileUrl     String?
   fileKey     String?
