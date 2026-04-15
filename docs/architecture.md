@@ -10,6 +10,8 @@
 | ORM | [Prisma 7](https://www.prisma.io/) |
 | Database | PostgreSQL 17 (Docker for local dev) |
 | Authentication | [Better Auth 1.x](https://www.better-auth.com/) |
+| File storage | [Uploadthing](https://uploadthing.com/) (free tier) |
+| Image-to-PDF | [pdf-lib](https://pdf-lib.js.org/) |
 
 ## Project structure
 
@@ -22,6 +24,9 @@ track-your-time/
 │   │   │   └── [id]/
 │   │   │       ├── members/     # Project member management
 │   │   │       └── members/[memberId]/  # Per-member role & removal
+│   │   ├── expenses/            # CRUD for expenses
+│   │   │   ├── [id]/            # Per-expense update & delete
+│   │   │   └── upload/          # File upload with image-to-PDF conversion
 │   │   └── time-entries/        # CRUD for time entries
 │   │       └── [id]/stop/       # PATCH to stop a running entry
 │   ├── dashboard/               # Protected dashboard page
@@ -38,7 +43,8 @@ track-your-time/
 ├── lib/
 │   ├── auth.ts                  # Better Auth server-side instance
 │   ├── auth-client.ts           # Better Auth client-side helpers
-│   └── prisma.ts                # Prisma singleton
+│   ├── prisma.ts                # Prisma singleton
+│   └── uploadthing.ts           # Uploadthing UTApi singleton
 ├── prisma/
 │   ├── schema.prisma            # Database schema
 │   └── migrations/              # SQL migration history

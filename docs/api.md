@@ -360,3 +360,119 @@ Returns aggregated time and earnings data for **all** projects the authenticated
 - Only **completed** entries are included.
 
 **Response `400`** if `period` is not one of the accepted values.
+
+## Expenses
+
+### List expenses
+
+```
+GET /api/expenses
+```
+
+Returns expenses for the authenticated user.
+
+**Query parameters** (all optional)
+
+| Parameter | Description |
+|---|---|
+| `projectId` | Filter by project. Use `none` to return expenses with no project, or a project ID. |
+| `dateFrom` | Return expenses on or after this date (ISO 8601). |
+| `dateTo` | Return expenses on or before this date (ISO 8601). |
+
+**Behaviour notes**
+
+- Without filters, returns the authenticated user's 100 most recent expenses.
+- When filtering by a **shared project**, expenses from **all members** are returned.
+
+**Response `200`**
+```json
+[
+  {
+    "id": "clxxx",
+    "description": "Software subscription",
+    "amount": 29.99,
+    "date": "2026-04-01T00:00:00.000Z",
+    "fileUrl": "https://ufs.sh/f/abc123...",
+    "fileKey": "abc123...",
+    "fileName": "receipt.pdf",
+    "project": { "id": "clyyy", "name": "My Project", "color": "#6366f1", "currency": "€" },
+    "user": { "id": "clzzz", "name": "Jane", "email": "jane@example.com" }
+  }
+]
+```
+
+`fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached.
+
+### Create expense
+
+```
+POST /api/expenses
+Content-Type: application/json
+```
+
+**Request body**
+```json
+{
+  "description": "Software subscription",
+  "amount": 29.99,
+  "date": "2026-04-01T00:00:00.000Z",
+  "projectId": "clyyy",
+  "fileUrl": "https://ufs.sh/f/abc123...",
+  "fileKey": "abc123...",
+  "fileName": "receipt.pdf"
+}
+```
+
+`projectId`, `fileUrl`, `fileKey`, and `fileName` are optional. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
+
+**Response `201`** – the created expense object.
+
+**Response `400`** if description is empty, amount is not a positive number, or date is invalid.
+
+**Response `403`** if assigning to a project where the caller has only the Reader role.
+
+**Response `404`** if the specified project is not found.
+
+### Update an expense
+
+```
+PATCH /api/expenses/:id
+Content-Type: application/json
+```
+
+Partially updates an expense. All fields are optional; omitted fields retain their current values. When `fileUrl` is provided, the previous file (if any) is deleted from Uploadthing.
+
+**Request body**
+```json
+{
+  "description": "Updated description",
+  "amount": 35.00,
+  "date": "2026-04-02T00:00:00.000Z",
+  "projectId": "clyyy",
+  "fileUrl": "https://ufs.sh/f/def456...",
+  "fileKey": "def456...",
+  "fileName": "new-receipt.pdf"
+}
+```
+
+Pass `fileUrl: null`, `fileKey: null`, `fileName: null` to remove an attached file.
+
+**Response `200`** – the updated expense object.
+
+**Response `404`** if the expense is not found or does not belong to the authenticated user.
+
+### Delete an expense
+
+```
+DELETE /api/expenses/:id
+```
+
+Permanently deletes the expense. If a file is attached, it is also deleted from Uploadthing.
+
+**Response `204`** – no content.
+
+**Response `404`** if the expense is not found or does not belong to the authenticated user.
+
+### Upload expense file
+
+See [File Storage — API reference](./file-storage.md#api-reference).
