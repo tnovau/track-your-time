@@ -133,7 +133,12 @@ model Expense {
   id          String   @id @default(cuid())
   description String
   amount      Float
+  tax         Float?
+  billable    Boolean  @default(false)
   date        DateTime
+  fileUrl     String?
+  fileKey     String?
+  fileName    String?
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectId   String?

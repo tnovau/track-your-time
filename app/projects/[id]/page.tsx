@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import AppSidebar from "@/components/app-sidebar";
 import ProjectAnalyticsView from "@/components/project-analytics-view";
+import ProjectExpenseAnalyticsView from "@/components/project-expense-analytics-view";
 
 export async function generateMetadata({
   params,
@@ -61,6 +62,7 @@ export default async function ProjectDetailPage({
           </div>
 
           <ProjectAnalyticsView projectId={id} />
+          <ProjectExpenseAnalyticsView projectId={id} />
         </div>
       </main>
     </div>

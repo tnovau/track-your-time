@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { headers } from "next/headers";
+import { utapi } from "@/lib/uploadthing";
 
 export async function PATCH(
   req: NextRequest,
@@ -42,6 +43,12 @@ export async function PATCH(
     }
   }
 
+  if (body.tax !== undefined && body.tax !== null) {
+    if (isNaN(Number(body.tax)) || Number(body.tax) < 0) {
+      return NextResponse.json({ error: "Tax must be a non-negative number" }, { status: 400 });
+    }
+  }
+
   // If changing project, verify membership
   if (body.projectId !== undefined && body.projectId !== null) {
     const membership = await prisma.projectMember.findFirst({
@@ -55,6 +62,18 @@ export async function PATCH(
     }
   }
 
+  // Handle file field updates
+  const fileData: { fileUrl?: string | null; fileKey?: string | null; fileName?: string | null } = {};
+  if (body.fileUrl !== undefined) {
+    // If replacing a file, delete the old one from Uploadthing
+    if (expense.fileKey && body.fileKey !== expense.fileKey) {
+      await utapi.deleteFiles(expense.fileKey).catch(() => {});
+    }
+    fileData.fileUrl = body.fileUrl;
+    fileData.fileKey = body.fileKey ?? null;
+    fileData.fileName = body.fileName ?? null;
+  }
+
   const updated = await prisma.expense.update({
     where: { id },
     data: {
@@ -64,8 +83,13 @@ export async function PATCH(
         body.amount !== undefined ? Number(body.amount) : expense.amount,
       date:
         body.date !== undefined ? new Date(body.date) : expense.date,
+      tax:
+        body.tax !== undefined ? (body.tax != null ? Number(body.tax) : null) : expense.tax,
+      billable:
+        body.billable !== undefined ? body.billable === true : expense.billable,
       projectId:
         body.projectId !== undefined ? body.projectId : expense.projectId,
+      ...fileData,
     },
     include: {
       project: { select: { id: true, name: true, color: true, currency: true } },
@@ -93,6 +117,11 @@ export async function DELETE(
 
   if (!expense) {
     return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+  }
+
+  // Delete file from Uploadthing if it exists
+  if (expense.fileKey) {
+    await utapi.deleteFiles(expense.fileKey).catch(() => {});
   }
 
   await prisma.expense.delete({ where: { id } });

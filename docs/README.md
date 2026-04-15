@@ -10,3 +10,4 @@ Welcome to the **Track Your Time** documentation. Use the links below to navigat
 | [Database](./database.md) | Prisma schema and migrations |
 | [API Reference](./api.md) | REST API endpoints |
 | [Project Sharing](./project-sharing.md) | Role-based project sharing (Admin / Tracker / Reader) |
+| [File Storage](./file-storage.md) | Uploadthing integration and image-to-PDF conversion |

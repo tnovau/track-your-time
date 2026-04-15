@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import AppSidebar from "@/components/app-sidebar";
 import ExpenseTracker from "@/components/expense-tracker";
+import ExpenseAnalyticsView from "@/components/expense-analytics-view";
 
 export const metadata = {
   title: "Expenses",
@@ -29,6 +30,9 @@ export default async function ExpensesPage() {
             </p>
           </div>
           <ExpenseTracker />
+          <div className="mt-10">
+            <ExpenseAnalyticsView />
+          </div>
         </div>
       </main>
     </div>

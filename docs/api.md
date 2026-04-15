@@ -360,3 +360,214 @@ Returns aggregated time and earnings data for **all** projects the authenticated
 - Only **completed** entries are included.
 
 **Response `400`** if `period` is not one of the accepted values.
+
+## Expenses
+
+### List expenses
+
+```
+GET /api/expenses
+```
+
+Returns expenses for the authenticated user.
+
+**Query parameters** (all optional)
+
+| Parameter | Description |
+|---|---|
+| `projectId` | Filter by project. Use `none` to return expenses with no project, or a project ID. |
+| `dateFrom` | Return expenses on or after this date (ISO 8601). |
+| `dateTo` | Return expenses on or before this date (ISO 8601). |
+
+**Behaviour notes**
+
+- Without filters, returns the authenticated user's 100 most recent expenses.
+- When filtering by a **shared project**, expenses from **all members** are returned.
+
+**Response `200`**
+```json
+[
+  {
+    "id": "clxxx",
+    "description": "Software subscription",
+    "amount": 29.99,
+    "tax": 4.50,
+    "billable": true,
+    "date": "2026-04-01T00:00:00.000Z",
+    "fileUrl": "https://ufs.sh/f/abc123...",
+    "fileKey": "abc123...",
+    "fileName": "receipt.pdf",
+    "project": { "id": "clyyy", "name": "My Project", "color": "#6366f1", "currency": "€" },
+    "user": { "id": "clzzz", "name": "Jane", "email": "jane@example.com" }
+  }
+]
+```
+
+`tax` is `null` when no tax was specified. `billable` defaults to `false`. `fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached.
+
+### Create expense
+
+```
+POST /api/expenses
+Content-Type: application/json
+```
+
+**Request body**
+```json
+{
+  "description": "Software subscription",
+  "amount": 29.99,
+  "tax": 4.50,
+  "billable": true,
+  "date": "2026-04-01T00:00:00.000Z",
+  "projectId": "clyyy",
+  "fileUrl": "https://ufs.sh/f/abc123...",
+  "fileKey": "abc123...",
+  "fileName": "receipt.pdf"
+}
+```
+
+`projectId`, `tax`, `billable`, `fileUrl`, `fileKey`, and `fileName` are optional. `tax` is a non-negative number representing the tax amount in the project's currency. `billable` defaults to `false`. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
+
+**Response `201`** – the created expense object.
+
+**Response `400`** if description is empty, amount is not a positive number, tax is negative, or date is invalid.
+
+**Response `403`** if assigning to a project where the caller has only the Reader role.
+
+**Response `404`** if the specified project is not found.
+
+### Update an expense
+
+```
+PATCH /api/expenses/:id
+Content-Type: application/json
+```
+
+Partially updates an expense. All fields are optional; omitted fields retain their current values. When `fileUrl` is provided, the previous file (if any) is deleted from Uploadthing.
+
+**Request body**
+```json
+{
+  "description": "Updated description",
+  "amount": 35.00,
+  "tax": 5.25,
+  "billable": true,
+  "date": "2026-04-02T00:00:00.000Z",
+  "projectId": "clyyy",
+  "fileUrl": "https://ufs.sh/f/def456...",
+  "fileKey": "def456...",
+  "fileName": "new-receipt.pdf"
+}
+```
+
+Pass `tax: null` to remove the tax value. Pass `fileUrl: null`, `fileKey: null`, `fileName: null` to remove an attached file.
+
+**Response `200`** – the updated expense object.
+
+**Response `404`** if the expense is not found or does not belong to the authenticated user.
+
+### Delete an expense
+
+```
+DELETE /api/expenses/:id
+```
+
+Permanently deletes the expense. If a file is attached, it is also deleted from Uploadthing.
+
+**Response `204`** – no content.
+
+**Response `404`** if the expense is not found or does not belong to the authenticated user.
+
+### Upload expense file
+
+See [File Storage — API reference](./file-storage.md#api-reference).
+
+### Overall expense analytics
+
+```
+GET /api/expenses/analytics
+```
+
+Returns expense analytics bucketed by time period across all projects.
+
+| Query param | Description |
+|---|---|
+| `period` | `week` (daily buckets), `month` (weekly buckets, default), or `year` (monthly buckets). |
+
+**Response `200`**
+```json
+{
+  "period": "month",
+  "start": "2026-04-01T00:00:00.000Z",
+  "end": "2026-05-01T00:00:00.000Z",
+  "labels": ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5"],
+  "projects": [
+    {
+      "id": "clyyy",
+      "name": "My Project",
+      "color": "#6366f1",
+      "amount": 150.00,
+      "tax": 12.50,
+      "count": 5,
+      "billableAmount": 100.00
+    }
+  ],
+  "series": [
+    {
+      "id": "clyyy",
+      "name": "My Project",
+      "color": "#6366f1",
+      "currency": "€",
+      "amounts": [30.00, 50.00, 20.00, 50.00, 0],
+      "taxes": [2.50, 5.00, 0, 5.00, 0],
+      "counts": [1, 2, 1, 1, 0],
+      "billableAmounts": [30.00, 50.00, 0, 20.00, 0]
+    }
+  ]
+}
+```
+
+Unassigned expenses appear under `id: "__none__"` with `name: "No Project"`.
+
+### Per-project expense analytics
+
+```
+GET /api/projects/:id/expenses-analytics
+```
+
+Returns expense analytics for a single project with current vs previous period comparison.
+
+| Query param | Description |
+|---|---|
+| `period` | `week` (default), `month`, or `year`. |
+
+**Response `200`**
+```json
+{
+  "project": { "id": "clyyy", "name": "My Project", "color": "#6366f1", "currency": "€" },
+  "period": "week",
+  "current": {
+    "start": "2026-04-13T00:00:00.000Z",
+    "end": "2026-04-20T00:00:00.000Z",
+    "data": [
+      { "label": "Mon", "amount": 25.00, "tax": 2.00, "count": 1, "billableAmount": 25.00 }
+    ],
+    "totalAmount": 25.00,
+    "totalTax": 2.00,
+    "totalCount": 1,
+    "totalBillableAmount": 25.00
+  },
+  "previous": {
+    "start": "2026-04-06T00:00:00.000Z",
+    "end": "2026-04-13T00:00:00.000Z",
+    "data": [],
+    "totalAmount": 0,
+    "totalTax": 0,
+    "totalCount": 0,
+    "totalBillableAmount": 0
+  }
+}
+```
+
+**Response `404`** if the project is not found or the user is not a member.
