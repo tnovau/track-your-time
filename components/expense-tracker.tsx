@@ -7,6 +7,7 @@ interface Expense {
   description: string;
   amount: number;
   tax: number | null;
+  billable: boolean;
   date: string;
   userId: string;
   fileUrl: string | null;
@@ -27,6 +28,7 @@ interface ExpenseFormState {
   description: string;
   amount: string;
   tax: string;
+  billable: boolean;
   date: string;
   projectId: string;
   file: File | null;
@@ -40,6 +42,7 @@ function emptyForm(): ExpenseFormState {
     description: "",
     amount: "",
     tax: "",
+    billable: false,
     date: new Date().toISOString().slice(0, 10),
     projectId: "",
     file: null,
@@ -165,6 +168,7 @@ export default function ExpenseTracker() {
           date: new Date(form.date).toISOString(),
           projectId: form.projectId || null,
           tax: form.tax ? Number(form.tax) : null,
+          billable: form.billable,
           ...fileData,
         }),
       });
@@ -189,6 +193,7 @@ export default function ExpenseTracker() {
       description: expense.description,
       amount: String(expense.amount),
       tax: expense.tax != null ? String(expense.tax) : "",
+      billable: expense.billable,
       date: new Date(expense.date).toISOString().slice(0, 10),
       projectId: expense.project?.id ?? "",
       file: null,
@@ -223,6 +228,7 @@ export default function ExpenseTracker() {
           date: new Date(editForm.date).toISOString(),
           projectId: editForm.projectId || null,
           tax: editForm.tax ? Number(editForm.tax) : null,
+          billable: editForm.billable,
           ...fileData,
         }),
       });
@@ -446,6 +452,18 @@ export default function ExpenseTracker() {
               </p>
             </div>
           </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="billable"
+              checked={form.billable}
+              onChange={(e) => setForm({ ...form, billable: e.target.checked })}
+              className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <label htmlFor="billable" className="text-sm text-gray-700 dark:text-gray-300">
+              Billable
+            </label>
+          </div>
           {formError && (
             <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>
           )}
@@ -610,6 +628,20 @@ export default function ExpenseTracker() {
                     )}
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id={`edit-billable-${editingId}`}
+                    checked={editForm.billable}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, billable: e.target.checked })
+                    }
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <label htmlFor={`edit-billable-${editingId}`} className="text-xs text-gray-700 dark:text-gray-300">
+                    Billable
+                  </label>
+                </div>
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={() => setEditingId(null)}
@@ -644,6 +676,11 @@ export default function ExpenseTracker() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">
                     {expense.description}
+                    {expense.billable && (
+                      <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400">
+                        Billable
+                      </span>
+                    )}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                     {formatDate(expense.date)}

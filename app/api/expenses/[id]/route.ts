@@ -85,6 +85,8 @@ export async function PATCH(
         body.date !== undefined ? new Date(body.date) : expense.date,
       tax:
         body.tax !== undefined ? (body.tax != null ? Number(body.tax) : null) : expense.tax,
+      billable:
+        body.billable !== undefined ? body.billable === true : expense.billable,
       projectId:
         body.projectId !== undefined ? body.projectId : expense.projectId,
       ...fileData,

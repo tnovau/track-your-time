@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
       description: body.description.trim(),
       amount: Number(body.amount),
       tax: body.tax != null ? Number(body.tax) : null,
+      billable: body.billable === true,
       date: new Date(body.date),
       userId: session.user.id,
       projectId: body.projectId ?? null,

@@ -134,6 +134,7 @@ model Expense {
   description String
   amount      Float
   tax         Float?
+  billable    Boolean  @default(false)
   date        DateTime
   fileUrl     String?
   fileKey     String?
