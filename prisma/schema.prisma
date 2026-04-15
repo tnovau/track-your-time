@@ -134,6 +134,9 @@ model Expense {
   description String
   amount      Float
   date        DateTime
+  fileUrl     String?
+  fileKey     String?
+  fileName    String?
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectId   String?

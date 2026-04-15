@@ -8,6 +8,9 @@ interface Expense {
   amount: number;
   date: string;
   userId: string;
+  fileUrl: string | null;
+  fileKey: string | null;
+  fileName: string | null;
   project: { id: string; name: string; color: string; currency: string | null } | null;
   user: { id: string; name: string; email: string };
 }
@@ -24,6 +27,10 @@ interface ExpenseFormState {
   amount: string;
   date: string;
   projectId: string;
+  file: File | null;
+  fileUrl: string | null;
+  fileKey: string | null;
+  fileName: string | null;
 }
 
 function emptyForm(): ExpenseFormState {
@@ -32,7 +39,29 @@ function emptyForm(): ExpenseFormState {
     amount: "",
     date: new Date().toISOString().slice(0, 10),
     projectId: "",
+    file: null,
+    fileUrl: null,
+    fileKey: null,
+    fileName: null,
   };
+}
+
+async function uploadFile(file: File): Promise<{
+  fileUrl: string;
+  fileKey: string;
+  fileName: string;
+}> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/expenses/upload", {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const data = await res.json();
+    throw new Error(data.error || "Upload failed");
+  }
+  return res.json();
 }
 
 function formatCurrency(amount: number, currency: string | null): string {
@@ -114,6 +143,16 @@ export default function ExpenseTracker() {
 
     setLoading(true);
     try {
+      let fileData: { fileUrl?: string; fileKey?: string; fileName?: string } = {};
+      if (form.file) {
+        try {
+          fileData = await uploadFile(form.file);
+        } catch (err) {
+          setFormError(err instanceof Error ? err.message : "File upload failed.");
+          return;
+        }
+      }
+
       const res = await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -122,6 +161,7 @@ export default function ExpenseTracker() {
           amount: Number(form.amount),
           date: new Date(form.date).toISOString(),
           projectId: form.projectId || null,
+          ...fileData,
         }),
       });
 
@@ -146,6 +186,10 @@ export default function ExpenseTracker() {
       amount: String(expense.amount),
       date: new Date(expense.date).toISOString().slice(0, 10),
       projectId: expense.project?.id ?? "",
+      file: null,
+      fileUrl: expense.fileUrl,
+      fileKey: expense.fileKey,
+      fileName: expense.fileName,
     });
   }
 
@@ -153,6 +197,18 @@ export default function ExpenseTracker() {
     if (!editingId) return;
     setLoading(true);
     try {
+      let fileData: { fileUrl?: string | null; fileKey?: string | null; fileName?: string | null } = {};
+      if (editForm.file) {
+        try {
+          fileData = await uploadFile(editForm.file);
+        } catch {
+          return;
+        }
+      } else if (editForm.fileUrl === null && editForm.fileKey === null) {
+        // File was removed
+        fileData = { fileUrl: null, fileKey: null, fileName: null };
+      }
+
       const res = await fetch(`/api/expenses/${editingId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -161,6 +217,7 @@ export default function ExpenseTracker() {
           amount: Number(editForm.amount),
           date: new Date(editForm.date).toISOString(),
           projectId: editForm.projectId || null,
+          ...fileData,
         }),
       });
 
@@ -332,6 +389,33 @@ export default function ExpenseTracker() {
                 ))}
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Receipt / Invoice (optional)
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,application/pdf"
+                  onChange={(e) =>
+                    setForm({ ...form, file: e.target.files?.[0] ?? null })
+                  }
+                  className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 dark:file:bg-indigo-950/50 dark:file:text-indigo-400"
+                />
+                {form.file && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, file: null })}
+                    className="text-xs text-gray-400 hover:text-red-500 shrink-0"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                JPG, PNG or PDF. Images are stored as PDF.
+              </p>
+            </div>
           </div>
           {formError && (
             <p className="text-sm text-red-600 dark:text-red-400">{formError}</p>
@@ -426,6 +510,62 @@ export default function ExpenseTracker() {
                       ))}
                     </select>
                   </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Receipt / Invoice
+                    </label>
+                    {editForm.fileUrl && !editForm.file ? (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={editForm.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline truncate"
+                        >
+                          {editForm.fileName || "View file"}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setEditForm({
+                              ...editForm,
+                              fileUrl: null,
+                              fileKey: null,
+                              fileName: null,
+                            })
+                          }
+                          className="text-xs text-gray-400 hover:text-red-500 shrink-0"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,application/pdf"
+                          onChange={(e) =>
+                            setEditForm({
+                              ...editForm,
+                              file: e.target.files?.[0] ?? null,
+                            })
+                          }
+                          className="w-full text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100 dark:file:bg-indigo-950/50 dark:file:text-indigo-400"
+                        />
+                        {editForm.file && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setEditForm({ ...editForm, file: null })
+                            }
+                            className="text-xs text-gray-400 hover:text-red-500 shrink-0"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-end gap-2">
                   <button
@@ -473,6 +613,31 @@ export default function ExpenseTracker() {
                         >
                           {expense.project.name}
                         </span>
+                      </>
+                    )}
+                    {expense.fileUrl && (
+                      <>
+                        {" · "}
+                        <a
+                          href={expense.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:underline"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          {expense.fileName || "Receipt"}
+                        </a>
                       </>
                     )}
                   </p>

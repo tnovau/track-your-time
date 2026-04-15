@@ -99,6 +99,9 @@ export async function POST(req: NextRequest) {
       date: new Date(body.date),
       userId: session.user.id,
       projectId: body.projectId ?? null,
+      fileUrl: body.fileUrl ?? null,
+      fileKey: body.fileKey ?? null,
+      fileName: body.fileName ?? null,
     },
     include: {
       project: { select: { id: true, name: true, color: true, currency: true } },
