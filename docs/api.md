@@ -482,3 +482,92 @@ Permanently deletes the expense. If a file is attached, it is also deleted from 
 ### Upload expense file
 
 See [File Storage — API reference](./file-storage.md#api-reference).
+
+### Overall expense analytics
+
+```
+GET /api/expenses/analytics
+```
+
+Returns expense analytics bucketed by time period across all projects.
+
+| Query param | Description |
+|---|---|
+| `period` | `week` (daily buckets), `month` (weekly buckets, default), or `year` (monthly buckets). |
+
+**Response `200`**
+```json
+{
+  "period": "month",
+  "start": "2026-04-01T00:00:00.000Z",
+  "end": "2026-05-01T00:00:00.000Z",
+  "labels": ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5"],
+  "projects": [
+    {
+      "id": "clyyy",
+      "name": "My Project",
+      "color": "#6366f1",
+      "amount": 150.00,
+      "tax": 12.50,
+      "count": 5,
+      "billableAmount": 100.00
+    }
+  ],
+  "series": [
+    {
+      "id": "clyyy",
+      "name": "My Project",
+      "color": "#6366f1",
+      "currency": "€",
+      "amounts": [30.00, 50.00, 20.00, 50.00, 0],
+      "taxes": [2.50, 5.00, 0, 5.00, 0],
+      "counts": [1, 2, 1, 1, 0],
+      "billableAmounts": [30.00, 50.00, 0, 20.00, 0]
+    }
+  ]
+}
+```
+
+Unassigned expenses appear under `id: "__none__"` with `name: "No Project"`.
+
+### Per-project expense analytics
+
+```
+GET /api/projects/:id/expenses-analytics
+```
+
+Returns expense analytics for a single project with current vs previous period comparison.
+
+| Query param | Description |
+|---|---|
+| `period` | `week` (default), `month`, or `year`. |
+
+**Response `200`**
+```json
+{
+  "project": { "id": "clyyy", "name": "My Project", "color": "#6366f1", "currency": "€" },
+  "period": "week",
+  "current": {
+    "start": "2026-04-13T00:00:00.000Z",
+    "end": "2026-04-20T00:00:00.000Z",
+    "data": [
+      { "label": "Mon", "amount": 25.00, "tax": 2.00, "count": 1, "billableAmount": 25.00 }
+    ],
+    "totalAmount": 25.00,
+    "totalTax": 2.00,
+    "totalCount": 1,
+    "totalBillableAmount": 25.00
+  },
+  "previous": {
+    "start": "2026-04-06T00:00:00.000Z",
+    "end": "2026-04-13T00:00:00.000Z",
+    "data": [],
+    "totalAmount": 0,
+    "totalTax": 0,
+    "totalCount": 0,
+    "totalBillableAmount": 0
+  }
+}
+```
+
+**Response `404`** if the project is not found or the user is not a member.
