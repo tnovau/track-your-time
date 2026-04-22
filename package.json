@@ -15,7 +15,7 @@
     "@types/pg": "^8.20.0",
     "@uploadthing/react": "^7.3.3",
     "@vercel/analytics": "^2.0.1",
-    "better-auth": "^1.6.5",
+    "better-auth": "^1.6.7",
     "geist": "^1.7.0",
     "next": "16.2.4",
     "pdf-lib": "^1.17.1",
