@@ -90,63 +90,87 @@ function ProjectForm({
 }: ProjectFormProps) {
   return (
     <div className="space-y-3">
-      <input
-        type="text"
-        placeholder="Project name"
-        value={form.name}
-        onChange={(e) => onChange({ ...form, name: e.target.value })}
-        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <input
-        type="text"
-        placeholder="Description (optional)"
-        value={form.description}
-        onChange={(e) => onChange({ ...form, description: e.target.value })}
-        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-gray-500 dark:text-gray-400">Color:</span>
-        {PRESET_COLORS.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => onChange({ ...form, color: c })}
-            className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
-            style={{
-              backgroundColor: c,
-              borderColor: form.color === c ? "white" : "transparent",
-              outline: form.color === c ? `2px solid ${c}` : "none",
-            }}
-            aria-label={`Select color ${c}`}
-          />
-        ))}
-        <input
-          type="color"
-          value={form.color}
-          onChange={(e) => onChange({ ...form, color: e.target.value })}
-          className="h-6 w-6 rounded cursor-pointer border border-gray-200 dark:border-gray-700"
-          aria-label="Custom color"
-        />
-      </div>
-      <div className="flex gap-3">
+      <div>
+        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          Project name
+        </label>
         <input
           type="text"
-          placeholder="Currency symbol (e.g. €, $)"
-          value={form.currency}
-          onChange={(e) => onChange({ ...form, currency: e.target.value })}
-          className="w-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          aria-label="Currency symbol"
+          placeholder="Project name"
+          value={form.name}
+          onChange={(e) => onChange({ ...form, name: e.target.value })}
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          Description (optional)
+        </label>
         <input
-          type="number"
-          placeholder="Price per hour (optional)"
-          value={form.hourlyRate}
-          min="0"
-          step="0.01"
-          onChange={(e) => onChange({ ...form, hourlyRate: e.target.value })}
-          className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          aria-label="Price per hour"
+          type="text"
+          placeholder="Description"
+          value={form.description}
+          onChange={(e) => onChange({ ...form, description: e.target.value })}
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+          Color
+        </label>
+        <div className="flex items-center gap-2 flex-wrap">
+          {PRESET_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => onChange({ ...form, color: c })}
+              className="h-6 w-6 rounded-full border-2 transition-transform hover:scale-110"
+              style={{
+                backgroundColor: c,
+                borderColor: form.color === c ? "white" : "transparent",
+                outline: form.color === c ? `2px solid ${c}` : "none",
+              }}
+              aria-label={`Select color ${c}`}
+            />
+          ))}
+          <input
+            type="color"
+            value={form.color}
+            onChange={(e) => onChange({ ...form, color: e.target.value })}
+            className="h-6 w-6 rounded cursor-pointer border border-gray-200 dark:border-gray-700"
+            aria-label="Custom color"
+          />
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            Currency symbol (optional)
+          </label>
+          <input
+            type="text"
+            placeholder="e.g. €, $"
+            value={form.currency}
+            onChange={(e) => onChange({ ...form, currency: e.target.value })}
+            className="w-40 rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Currency symbol"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+            Price per hour (optional)
+          </label>
+          <input
+            type="number"
+            placeholder="0.00"
+            value={form.hourlyRate}
+            min="0"
+            step="0.01"
+            onChange={(e) => onChange({ ...form, hourlyRate: e.target.value })}
+            className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            aria-label="Price per hour"
+          />
+        </div>
       </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       <div className="flex justify-end gap-2">

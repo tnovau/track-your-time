@@ -6,6 +6,7 @@ import Link from "next/link";
 import AppSidebar from "@/components/app-sidebar";
 import ProjectAnalyticsView from "@/components/project-analytics-view";
 import ProjectExpenseAnalyticsView from "@/components/project-expense-analytics-view";
+import ProjectCalendarView from "@/components/project-calendar-view";
 
 export async function generateMetadata({
   params,
@@ -61,6 +62,7 @@ export default async function ProjectDetailPage({
             <span className="text-gray-700 dark:text-gray-200 font-medium">Analytics</span>
           </div>
 
+          <ProjectCalendarView projectId={id} />
           <ProjectAnalyticsView projectId={id} />
           <ProjectExpenseAnalyticsView projectId={id} />
         </div>

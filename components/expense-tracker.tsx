@@ -563,6 +563,9 @@ export default function ExpenseTracker() {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Description
+                    </label>
                     <input
                       type="text"
                       value={editForm.description}
@@ -573,6 +576,9 @@ export default function ExpenseTracker() {
                     />
                   </div>
                   <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Amount
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -586,6 +592,9 @@ export default function ExpenseTracker() {
                     />
                   </div>
                   <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Tax (optional)
+                    </label>
                     <input
                       type="number"
                       step="0.01"
@@ -599,6 +608,9 @@ export default function ExpenseTracker() {
                     />
                   </div>
                   <div>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Date
+                    </label>
                     <input
                       type="date"
                       value={editForm.date}
@@ -609,6 +621,9 @@ export default function ExpenseTracker() {
                     />
                   </div>
                   <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Project (optional)
+                    </label>
                     <select
                       value={editForm.projectId}
                       onChange={(e) =>
@@ -625,6 +640,9 @@ export default function ExpenseTracker() {
                     </select>
                   </div>
                   <div className="sm:col-span-2">
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      Category (optional)
+                    </label>
                     <select
                       value={editForm.categoryId}
                       onChange={(e) =>
