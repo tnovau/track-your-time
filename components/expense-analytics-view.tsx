@@ -21,6 +21,7 @@ import {
 type Period = "week" | "month" | "year";
 type ChartType = "bar" | "line" | "pie";
 type Metric = "amount" | "tax" | "count";
+type GroupBy = "project" | "category";
 
 interface ProjectSeries {
   id: string;
@@ -45,6 +46,7 @@ interface ProjectPie {
 
 interface AnalyticsData {
   period: Period;
+  groupBy: GroupBy;
   start: string;
   end: string;
   labels: string[];
@@ -107,12 +109,13 @@ export default function ExpenseAnalyticsView() {
   const [period, setPeriod] = useState<Period>("month");
   const [chartType, setChartType] = useState<ChartType>("bar");
   const [metric, setMetric] = useState<Metric>("amount");
+  const [groupBy, setGroupBy] = useState<GroupBy>("project");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/expenses/analytics?period=${period}`);
+      const res = await fetch(`/api/expenses/analytics?period=${period}&groupBy=${groupBy}`);
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
         setError(json.error ?? `Failed to load analytics (HTTP ${res.status}).`);
@@ -124,7 +127,7 @@ export default function ExpenseAnalyticsView() {
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [period, groupBy]);
 
   useEffect(() => {
     fetchData();
@@ -187,6 +190,23 @@ export default function ExpenseAnalyticsView() {
         <h2 className="text-lg font-semibold">Expense Analytics — {PERIOD_LABELS[period]}</h2>
 
         <div className="flex gap-2 flex-wrap">
+          {/* Group by */}
+          <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
+            {(["project", "category"] as GroupBy[]).map((g) => (
+              <button
+                key={g}
+                onClick={() => setGroupBy(g)}
+                className={`px-3 py-1.5 transition-colors ${
+                  groupBy === g
+                    ? "bg-indigo-600 text-white"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                }`}
+              >
+                {g.charAt(0).toUpperCase() + g.slice(1)}
+              </button>
+            ))}
+          </div>
+
           {/* Period */}
           <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
             {(["week", "month", "year"] as Period[]).map((p) => (
@@ -385,16 +405,15 @@ export default function ExpenseAnalyticsView() {
         )}
       </div>
 
-      {/* Per-project breakdown */}
+      {/* Per-group breakdown */}
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-          Project Breakdown
+          {groupBy === "category" ? "Category Breakdown" : "Project Breakdown"}
         </p>
         {projects.map((p) => {
           const value = pieValue(p);
           const total = metric === "amount" ? totalAmount : metric === "tax" ? totalTax : totalCount;
           const pct = total > 0 ? (value / total) * 100 : 0;
-          const isReal = p.id !== "__none__";
           const inner = (
             <>
               <span
@@ -419,7 +438,8 @@ export default function ExpenseAnalyticsView() {
             </>
           );
           const cls = "flex items-center gap-3 rounded-xl border border-gray-200 dark:border-gray-800 px-4 py-2.5 hover:border-gray-300 dark:hover:border-gray-700 hover:shadow-sm transition-all";
-          return isReal ? (
+          const linkable = groupBy === "project" && p.id !== "__none__";
+          return linkable ? (
             <Link key={p.id} href={`/projects/${p.id}`} className={cls}>
               {inner}
             </Link>
