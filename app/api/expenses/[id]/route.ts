@@ -89,10 +89,13 @@ export async function PATCH(
         body.billable !== undefined ? body.billable === true : expense.billable,
       projectId:
         body.projectId !== undefined ? body.projectId : expense.projectId,
+      categoryId:
+        body.categoryId !== undefined ? body.categoryId : expense.categoryId,
       ...fileData,
     },
     include: {
       project: { select: { id: true, name: true, color: true, currency: true } },
+      category: { select: { id: true, name: true, color: true } },
       user: { select: { id: true, name: true, email: true } },
     },
   });

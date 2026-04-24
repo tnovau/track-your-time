@@ -110,10 +110,28 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+function TagIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.29-7.29a1 1 0 0 0 0-1.41Z" />
+      <path d="M7 7h.01" />
+    </svg>
+  );
+}
+
 const navItems = [
   { href: "/dashboard", label: "Time Tracker", icon: ClockIcon },
   { href: "/projects", label: "Projects", icon: FolderIcon },
   { href: "/expenses", label: "Expenses", icon: ReceiptIcon },
+  { href: "/categories", label: "Categories", icon: TagIcon },
   { href: "/analytics", label: "Analytics", icon: ChartIcon },
 ];
 

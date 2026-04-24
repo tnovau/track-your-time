@@ -21,11 +21,12 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  sessions      Session[]
-  accounts      Account[]
-  projects      Project[]
-  timeEntries   TimeEntry[]
-  expenses      Expense[]
+  sessions           Session[]
+  accounts           Account[]
+  projects           Project[]
+  timeEntries        TimeEntry[]
+  expenses           Expense[]
+  expenseCategories  ExpenseCategory[]
   projectMemberships ProjectMember[]
 }
 
@@ -129,23 +130,39 @@ model TimeEntry {
   @@index([projectId])
 }
 
+model ExpenseCategory {
+  id        String    @id @default(cuid())
+  name      String
+  color     String    @default("#6366f1")
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
 model Expense {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   description String
   amount      Float
   tax         Float?
-  billable    Boolean  @default(false)
+  billable    Boolean          @default(false)
   date        DateTime
   fileUrl     String?
   fileKey     String?
   fileName    String?
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   projectId   String?
-  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  project     Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  categoryId  String?
+  category    ExpenseCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
   @@index([userId])
   @@index([projectId])
+  @@index([categoryId])
 }

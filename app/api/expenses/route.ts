@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
 
   const { searchParams } = new URL(req.url);
   const projectFilter = searchParams.get("projectId");
+  const categoryFilter = searchParams.get("categoryId");
   const dateFrom = searchParams.get("dateFrom");
   const dateTo = searchParams.get("dateTo");
 
@@ -46,10 +47,17 @@ export async function GET(req: NextRequest) {
     where.userId = session.user.id;
   }
 
+  if (categoryFilter === "none") {
+    where.categoryId = null;
+  } else if (categoryFilter) {
+    where.categoryId = categoryFilter;
+  }
+
   const expenses = await prisma.expense.findMany({
     where,
     include: {
       project: { select: { id: true, name: true, color: true, currency: true } },
+      category: { select: { id: true, name: true, color: true } },
       user: { select: { id: true, name: true, email: true } },
     },
     orderBy: { date: "desc" },
@@ -107,12 +115,14 @@ export async function POST(req: NextRequest) {
       date: new Date(body.date),
       userId: session.user.id,
       projectId: body.projectId ?? null,
+      categoryId: body.categoryId ?? null,
       fileUrl: body.fileUrl ?? null,
       fileKey: body.fileKey ?? null,
       fileName: body.fileName ?? null,
     },
     include: {
       project: { select: { id: true, name: true, color: true, currency: true } },
+      category: { select: { id: true, name: true, color: true } },
       user: { select: { id: true, name: true, email: true } },
     },
   });

@@ -14,6 +14,7 @@ interface Expense {
   fileKey: string | null;
   fileName: string | null;
   project: { id: string; name: string; color: string; currency: string | null } | null;
+  category: { id: string; name: string; color: string } | null;
   user: { id: string; name: string; email: string };
 }
 
@@ -24,6 +25,12 @@ interface Project {
   currency: string | null;
 }
 
+interface Category {
+  id: string;
+  name: string;
+  color: string;
+}
+
 interface ExpenseFormState {
   description: string;
   amount: string;
@@ -31,6 +38,7 @@ interface ExpenseFormState {
   billable: boolean;
   date: string;
   projectId: string;
+  categoryId: string;
   file: File | null;
   fileUrl: string | null;
   fileKey: string | null;
@@ -45,6 +53,7 @@ function emptyForm(): ExpenseFormState {
     billable: false,
     date: new Date().toISOString().slice(0, 10),
     projectId: "",
+    categoryId: "",
     file: null,
     fileUrl: null,
     fileKey: null,
@@ -93,6 +102,7 @@ function formatDate(iso: string): string {
 export default function ExpenseTracker() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [fetching, setFetching] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -103,30 +113,34 @@ export default function ExpenseTracker() {
 
   // Filters
   const [filterProjectId, setFilterProjectId] = useState("");
+  const [filterCategoryId, setFilterCategoryId] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
-  const isFilterActive = !!(filterProjectId || filterDateFrom || filterDateTo);
+  const isFilterActive = !!(filterProjectId || filterCategoryId || filterDateFrom || filterDateTo);
 
   const fetchData = useCallback(async () => {
     setFetching(true);
     try {
       const params = new URLSearchParams();
       if (filterProjectId) params.set("projectId", filterProjectId);
+      if (filterCategoryId) params.set("categoryId", filterCategoryId);
       if (filterDateFrom) params.set("dateFrom", filterDateFrom);
       if (filterDateTo) params.set("dateTo", filterDateTo);
       const qs = params.toString();
 
-      const [expRes, projRes] = await Promise.all([
+      const [expRes, projRes, catRes] = await Promise.all([
         fetch(`/api/expenses${qs ? `?${qs}` : ""}`),
         fetch("/api/projects"),
+        fetch("/api/expense-categories"),
       ]);
 
       if (expRes.ok) setExpenses(await expRes.json());
       if (projRes.ok) setProjects(await projRes.json());
+      if (catRes.ok) setCategories(await catRes.json());
     } finally {
       setFetching(false);
     }
-  }, [filterProjectId, filterDateFrom, filterDateTo]);
+  }, [filterProjectId, filterCategoryId, filterDateFrom, filterDateTo]);
 
   useEffect(() => {
     fetchData();
@@ -167,6 +181,7 @@ export default function ExpenseTracker() {
           amount: Number(form.amount),
           date: new Date(form.date).toISOString(),
           projectId: form.projectId || null,
+          categoryId: form.categoryId || null,
           tax: form.tax ? Number(form.tax) : null,
           billable: form.billable,
           ...fileData,
@@ -196,6 +211,7 @@ export default function ExpenseTracker() {
       billable: expense.billable,
       date: new Date(expense.date).toISOString().slice(0, 10),
       projectId: expense.project?.id ?? "",
+      categoryId: expense.category?.id ?? "",
       file: null,
       fileUrl: expense.fileUrl,
       fileKey: expense.fileKey,
@@ -227,6 +243,7 @@ export default function ExpenseTracker() {
           amount: Number(editForm.amount),
           date: new Date(editForm.date).toISOString(),
           projectId: editForm.projectId || null,
+          categoryId: editForm.categoryId || null,
           tax: editForm.tax ? Number(editForm.tax) : null,
           billable: editForm.billable,
           ...fileData,
@@ -254,6 +271,7 @@ export default function ExpenseTracker() {
 
   function clearFilters() {
     setFilterProjectId("");
+    setFilterCategoryId("");
     setFilterDateFrom("");
     setFilterDateTo("");
   }
@@ -283,6 +301,24 @@ export default function ExpenseTracker() {
               {projects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex-1 min-w-[140px]">
+            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+              Category
+            </label>
+            <select
+              value={filterCategoryId}
+              onChange={(e) => setFilterCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+            >
+              <option value="">All categories</option>
+              <option value="none">No category</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -420,6 +456,23 @@ export default function ExpenseTracker() {
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                Category (optional)
+              </label>
+              <select
+                value={form.categoryId}
+                onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+              >
+                <option value="">No category</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
                   </option>
                 ))}
               </select>
@@ -572,6 +625,22 @@ export default function ExpenseTracker() {
                     </select>
                   </div>
                   <div className="sm:col-span-2">
+                    <select
+                      value={editForm.categoryId}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, categoryId: e.target.value })
+                      }
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm"
+                    >
+                      <option value="">No category</option>
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                       Receipt / Invoice
                     </label>
@@ -692,6 +761,21 @@ export default function ExpenseTracker() {
                           style={{ color: expense.project.color }}
                         >
                           {expense.project.name}
+                        </span>
+                      </>
+                    )}
+                    {expense.category && (
+                      <>
+                        {" · "}
+                        <span
+                          className="inline-flex items-center gap-0.5 font-medium"
+                          style={{ color: expense.category.color }}
+                        >
+                          <span
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: expense.category.color }}
+                          />
+                          {expense.category.name}
                         </span>
                       </>
                     )}
