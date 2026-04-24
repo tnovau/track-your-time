@@ -117,6 +117,48 @@ See [Project Sharing → API reference](./project-sharing.md#api-reference) for 
 - `PATCH /api/projects/:id/members/:memberId` – change a member's role
 - `DELETE /api/projects/:id/members/:memberId` – remove a member
 
+### Get project calendar
+
+```
+GET /api/projects/:id/calendar
+```
+
+Returns per-day worked hours for the **authenticated user** within a given month. The caller must be a member of the project.
+
+**Query parameters**
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `year` | integer | current year | The calendar year (e.g. `2026`). |
+| `month` | integer | current month | The month, 1-based (e.g. `4` for April). |
+
+**Response `200`**
+```json
+{
+  "project": {
+    "name": "My Project",
+    "color": "#6366f1"
+  },
+  "year": 2026,
+  "month": 4,
+  "days": [
+    { "day": 1, "hours": 3.5 },
+    { "day": 3, "hours": 7.0 },
+    { "day": 7, "hours": 1.25 }
+  ]
+}
+```
+
+- Only days on which at least one entry was started are included in `days`.
+- `hours` is rounded to 2 decimal places and is the sum of `duration` for all entries that started on that day. Running entries (no `endTime`) contribute `0` to the total.
+- `start` of a day is determined by the server's local date of `startTime`.
+
+**Response `400`** if `year` or `month` is missing, non-numeric, or out of range.
+
+**Response `404`** if the project is not found or the caller is not a member.
+
+---
+
 ### Get project analytics
 
 ```
@@ -361,6 +403,77 @@ Returns aggregated time and earnings data for **all** projects the authenticated
 
 **Response `400`** if `period` is not one of the accepted values.
 
+## Expense Categories
+
+Expense categories are personal to each user and can be used to organise expenses independently of projects. A color is auto-assigned on creation by cycling through a fixed palette.
+
+### List categories
+
+```
+GET /api/expense-categories
+```
+
+Returns all categories belonging to the authenticated user, ordered by name.
+
+**Response `200`**
+```json
+[
+  { "id": "clxxx", "name": "Software", "color": "#6366f1" }
+]
+```
+
+### Create a category
+
+```
+POST /api/expense-categories
+Content-Type: application/json
+```
+
+**Request body**
+```json
+{ "name": "Travel" }
+```
+
+`name` is required and must be a non-empty string. `color` is auto-assigned.
+
+**Response `201`** – the created category object.
+
+**Response `400`** if `name` is missing or empty.
+
+### Update a category
+
+```
+PATCH /api/expense-categories/:id
+Content-Type: application/json
+```
+
+**Request body**
+```json
+{ "name": "Updated Name" }
+```
+
+`name` is required.
+
+**Response `200`** – the updated category object.
+
+**Response `400`** if `name` is missing or empty.
+
+**Response `404`** if the category is not found or does not belong to the authenticated user.
+
+### Delete a category
+
+```
+DELETE /api/expense-categories/:id
+```
+
+Permanently deletes the category. Existing expenses that referenced this category will have their `categoryId` set to `null`.
+
+**Response `204`** – no content.
+
+**Response `404`** if the category is not found or does not belong to the authenticated user.
+
+---
+
 ## Expenses
 
 ### List expenses
@@ -376,6 +489,7 @@ Returns expenses for the authenticated user.
 | Parameter | Description |
 |---|---|
 | `projectId` | Filter by project. Use `none` to return expenses with no project, or a project ID. |
+| `categoryId` | Filter by category. Use `none` to return expenses with no category, or a category ID. |
 | `dateFrom` | Return expenses on or after this date (ISO 8601). |
 | `dateTo` | Return expenses on or before this date (ISO 8601). |
 
@@ -398,12 +512,13 @@ Returns expenses for the authenticated user.
     "fileKey": "abc123...",
     "fileName": "receipt.pdf",
     "project": { "id": "clyyy", "name": "My Project", "color": "#6366f1", "currency": "€" },
+    "category": { "id": "clccc", "name": "Software", "color": "#6366f1" },
     "user": { "id": "clzzz", "name": "Jane", "email": "jane@example.com" }
   }
 ]
 ```
 
-`tax` is `null` when no tax was specified. `billable` defaults to `false`. `fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached.
+`tax` is `null` when no tax was specified. `billable` defaults to `false`. `fileUrl`, `fileKey`, and `fileName` are `null` when no file is attached. `category` is `null` when no category is assigned.
 
 ### Create expense
 
@@ -421,13 +536,14 @@ Content-Type: application/json
   "billable": true,
   "date": "2026-04-01T00:00:00.000Z",
   "projectId": "clyyy",
+  "categoryId": "clccc",
   "fileUrl": "https://ufs.sh/f/abc123...",
   "fileKey": "abc123...",
   "fileName": "receipt.pdf"
 }
 ```
 
-`projectId`, `tax`, `billable`, `fileUrl`, `fileKey`, and `fileName` are optional. `tax` is a non-negative number representing the tax amount in the project's currency. `billable` defaults to `false`. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
+`projectId`, `categoryId`, `tax`, `billable`, `fileUrl`, `fileKey`, and `fileName` are optional. `tax` is a non-negative number representing the tax amount in the project's currency. `billable` defaults to `false`. Upload a file first via `POST /api/expenses/upload` (see [File Storage](./file-storage.md#api-reference)) to obtain the file fields.
 
 **Response `201`** – the created expense object.
 
@@ -455,6 +571,7 @@ Partially updates an expense. All fields are optional; omitted fields retain the
   "billable": true,
   "date": "2026-04-02T00:00:00.000Z",
   "projectId": "clyyy",
+  "categoryId": "clccc",
   "fileUrl": "https://ufs.sh/f/def456...",
   "fileKey": "def456...",
   "fileName": "new-receipt.pdf"
@@ -494,17 +611,16 @@ Returns expense analytics bucketed by time period across all projects.
 | Query param | Description |
 |---|---|
 | `period` | `week` (daily buckets), `month` (weekly buckets, default), or `year` (monthly buckets). |
+| `groupBy` | `project` (default) or `category`. Determines how data is grouped in the response. |
+
+When `groupBy=category`, the response groups data by expense categories instead of projects. The shape is identical but `projects` and `series` entries represent categories. Entries with no category appear under `id: "__none__"` with `name: "No Category"`. The `currency` field in each series entry is `null` when grouping by category.
 
 **Response `200`**
 ```json
 {
   "period": "month",
+  "groupBy": "project",
   "start": "2026-04-01T00:00:00.000Z",
-  "end": "2026-05-01T00:00:00.000Z",
-  "labels": ["Wk 1", "Wk 2", "Wk 3", "Wk 4", "Wk 5"],
-  "projects": [
-    {
-      "id": "clyyy",
       "name": "My Project",
       "color": "#6366f1",
       "amount": 150.00,
