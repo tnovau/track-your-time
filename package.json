@@ -18,7 +18,7 @@
     "geist": "^1.7.2",
     "next": "16.2.12",
     "react": "19.2.8",
-    "react-dom": "19.2.7",
+    "react-dom": "19.2.8",
     "recharts": "^3.10.1"
   },
   "devDependencies": {
